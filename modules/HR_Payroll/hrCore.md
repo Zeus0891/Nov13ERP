@@ -1,3 +1,14 @@
+
+# 🟦 **MODULE 31 — PAYROLL / HR**
+
+**Payroll + HR es MUY grande**, así que lo divido en **3 módulos**, todos ≤10 tablas:
+
+1. **HR Core**
+2. **Time & Attendance**
+3. **Payroll Engine**
+
+---
+
 # 🟦 **MODULE 31 — PAYROLL / HR**
 
 **Payroll + HR es MUY grande**, así que lo divido en **3 módulos**, todos ≤10 tablas:
