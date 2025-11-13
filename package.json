@@ -29,6 +29,7 @@
         "db:validate": "dotenv -e .env -- prisma validate --schema=prisma/schemas/schema.prisma",
         "db:seed": "tsx src/prisma/seed.ts",
         "db:reset": "dotenv -e .env -- prisma migrate reset --force --schema=prisma/schemas/schema.prisma",
+        "copilot:setup": "echo '🤖 GitHub Copilot is configured! Check .vscode/ for settings and snippets.'",
         "postinstall": "prisma generate",
         "clean": "rimraf dist",
         "prepare": "husky install"
