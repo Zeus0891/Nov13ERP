@@ -1,5 +1,5 @@
 
-# 🟦 **MODULE  — INVENTORY CONTROL (ZERO LOSS) (Max 10 tables)**
+# 🟦 **MODULE 17C — INVENTORY CONTROL (ZERO LOSS) (Max 10 tables)**
 
  This module enforces risk prevention, shrink reduction, theft control.
 

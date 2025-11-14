@@ -1,4 +1,4 @@
-# 🟩 **MODULE — AI CORE (Max 10 tables)**
+# 🟩 **MODULE 20A — AI CORE (Max 10 tables)**
 
  Model executions, prompts, playbooks, actions, embeddings.
 

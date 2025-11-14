@@ -1,18 +1,21 @@
 .
 ├── AI
+│   ├── README.md
 │   ├── aiCore.md
 │   ├── aiDocumentIntelligence.md
 │   └── aiInsights&Analytics.md
 ├── AccessControl
+│   ├── README.md
 │   └── accessControl.md
 ├── Approvals
+│   ├── README.md
 │   └── approvals.md
-├── Banking
 ├── Bidding
 │   └── bidding.md
 ├── Billing
 │   └── billingAR.md
 ├── CRM
+│   ├── README.md
 │   ├── crmCommunication.md
 │   ├── crmCore.md
 │   ├── crmInsights.md
@@ -20,10 +23,11 @@
 │   └── crmRelationships.md
 ├── ChangeOrder
 │   └── changeOrder.md
-├── CommunicationsChat
+├── Communications
+│   ├── README.md
 │   ├── communicationEmailEngine.md
 │   ├── communicationsMessaging&Chat.md
-│   └── communicatiosSMS&Calls.md
+│   └── communicationsSMS&Calls.md
 ├── Compliance
 │   └── compliance.md
 ├── Contracts
@@ -34,16 +38,20 @@
 │   ├── analyticsCore.md
 │   └── dashboard&Visualizations.md
 ├── Documents
+│   ├── README.md
 │   ├── documentsCore.md
 │   └── documentsOCR&AI.md
 ├── ESignature
 │   └── eSIGNATURE.md
 ├── Estimate
+│   ├── README.md
 │   └── estimate.md
 ├── Expenses
+│   ├── README.md
 │   ├── expenses.md
 │   └── expensesCore.md
 ├── FinancialLedger&Accounting
+│   ├── README.md
 │   ├── accountingTransaction.md
 │   ├── banking.md
 │   ├── generalLedger.md
@@ -53,24 +61,29 @@
 │   ├── payrollEngine.md
 │   └── time&attendance.md
 ├── Identity
+│   ├── README.md
 │   ├── identityCore.md
 │   └── identitySecurity.md
 ├── Integrations
 │   ├── integrationsCore.md
 │   └── integrationsSyncEngine.md
 ├── Inventory
+│   ├── README.md
 │   ├── inventoryControl.md
 │   ├── inventoryCore.md
 │   └── inventoryTransactions.md
 ├── Invoice
+│   ├── README.md
 │   └── invoice.md
 ├── JobCosting
 │   └── jobCosting.md
 ├── Lead
+│   ├── README.md
 │   └── lead.md
 ├── MaintenancePlans
 │   └── maintenancePlans&RecurringServiceContracts.md
 ├── Notifications
+│   ├── README.md
 │   └── notifications.md
 ├── Opportunity
 │   └── opportunity.md
@@ -79,6 +92,7 @@
 ├── Procurement
 │   └── procurementPo.md
 ├── Projects
+│   ├── README.md
 │   ├── projectRiskIssue&Logs.md
 │   ├── projectTask&Scheduling.md
 │   └── projectsCore.md
@@ -94,14 +108,15 @@
 ├── Safety
 │   └── safety.md
 ├── Scheduling
+│   ├── README.md
 │   ├── schedulingCore.md
 │   └── schedulingOptimization&Constrains.md
 ├── Submittals
 │   └── submittals.md
 ├── Tasks
 │   └── tasks.md
-├── TaxCompliance
 ├── Tenant
+│   ├── README.md
 │   └── tenant.md
 ├── WeatherIntelligence
 │   ├── weatherImpact&Alerts.md
@@ -109,8 +124,8 @@
 ├── ZeroLoss
 │   └── zeroLoss.md
 ├── project-structure.txt
-└── workOrders&FieldsService
-    ├── maintenancePlans.md
+└── workOrders&FieldService
+    ├── README.md
     └── workOrders.md
 
-45 directories, 69 files
+43 directories, 86 files

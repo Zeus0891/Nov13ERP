@@ -1,7 +1,7 @@
 
-# 🟦 **MODULE  — AI INSIGHTS & ANALYTICS (Max 10 tables)**
+# 🟦 **MODULE 20C — AI INSIGHTS & ANALYTICS (Max 10 tables)**
 
- Predictions, anomalies, forecasts, recommendations.
+ Predictions, recommendations, anomalies, trends, forecasting.
 
 ---
 
