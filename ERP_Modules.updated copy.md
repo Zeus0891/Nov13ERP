@@ -2,30 +2,32 @@
 
 Consolidated documentation for ERP modules extracted from the `/modules` directory.
 
-Note: This document lists only models explicitly defined in each module’s `.md` files (excluding any README.md). No inferred or consolidated models have been included.
+Note: This document defines the canonical target module/model layout for the ERP. It is derived from the `/modules` directory and may also include forward-looking modules and models that are not yet implemented but are intended as the reference design.
 
 ## AccessControl
 
 Strategic purpose: Role- and attribute-based access enforcement with granular scopes, policies, and complete auditing across the ERP.
 
 Notes:
-- Supports RBAC and ABAC with resource.action permissions.
-- Granular scopes: tenant, project, department, cost center, location.
-- Policy conditions using attribute, operator, value tuples.
-- Immutable audit trail for compliance and forensics.
+- Supports RBAC and ABAC with `resource.action` permissions.
+- Authorization is evaluated in the context of a tenant `Member` (or `ServiceAccount`) rather than raw `User` records.
+- Permissions are defined globally and attached to tenant-scoped roles.
+- Immutable audit trail for compliance, security, and forensics.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| AccessRole              | Tenant | Yes    | Hierarchical role definitions supporting organizational structures with predefined and custom roles (Admin, PM, Accountant, Field Tech, Viewer) and inherited permission sets|
-| AccessPermission        | Tenant | Yes    | Granular action-level permission definitions following resource.action (e.g., estimate.view, invoice.create, project.manage) enabling fine-grained access across all entities|
-| AccessRolePermission    | Tenant | No     | Mapping between roles and permissions (many-to-many) with support for inheritance and role composition                                                                       |
-| AccessRoleAssignment    | Tenant | No     | Assigns roles to users, service accounts, or API keys with temporal validity and scope restrictions                                                                          |
-| AccessPolicy            | Tenant | Yes    | ABAC policy definitions enabling dynamic access decisions based on user attributes, resource properties, environment, and business rules                                     |
-| AccessPolicyCondition   | Tenant | No     | Rule conditions within policies: attribute comparisons and operators (equals, gt, in, contains) enabling complex authorization logic                                         |
-| AccessScope             | Tenant | Yes    | Multi-dimensional scoping framework restricting access by tenant, project, department, cost center, and location                                                             |
-| AccessScopeAssignment   | Tenant | No     | Scope boundary assignments to roles or individual users ensuring data segregation and least-privilege                                                                        |
-| AccessAuditEvent        | Tenant | No     | Immutable audit trail of access checks: grants, denials, policy evaluations, with timestamps and decision context                                                            |
-| AccessResource          | Tenant | No     | Registry of permissionable entities (Estimate, Invoice, Project, Task, etc.) enabling dynamic permission management                                                          |
+| Model                | Scope  | Parent | Description |
+|----------------------|--------|--------|-------------|
+| Role                 | Tenant | Yes    | Tenant-scoped role definitions (Admin, PM, AP Clerk, Customer, Vendor, etc.) with hierarchical inheritance and metadata. |
+| Permission           | Global | Yes    | Global catalog of fine-grained permissions following the `resource.action` convention (e.g., `estimate.view`, `invoice.create`, `project.manage`). |
+| RolePermission       | Tenant | No     | Many-to-many mapping between tenant `Role` records and `Permission` entries, with optional allow/deny flags and effective periods. |
+| MemberRole           | Tenant | No     | Assignment of roles to `Member` records (and, where applicable, `ServiceAccount`) with temporal validity, primary-role flags, and reason codes. |
+| AccessPolicy         | Tenant | Yes    | ABAC policy definitions evaluated in addition to RBAC, using member attributes, resource attributes, environment, and custom business rules. |
+| AccessPolicyCondition| Tenant | No     | Atomic conditions (attribute, operator, value) combined into policies to express complex authorization logic. |
+| AccessScope          | Tenant | Yes    | Multi-dimensional scoping (tenant, project, department, cost center, location, account, vendor) that can be bound to roles and members. |
+| AccessScopeAssignment| Tenant | No     | Scope boundary assignments linking `MemberRole` or `ServiceAccount` identities to one or more `AccessScope` records for least-privilege enforcement. |
+| AccessResource       | Global | No     | Registry of permissionable resource types and optional concrete instances enabling object-level access control and policy targeting. |
+| AccessAuditEvent     | Tenant | No     | Immutable audit trail of access checks: initiator `Actor`/`Member`, resource, decision, policies evaluated, and correlation IDs. |
+| ServiceAccount       | Tenant | Yes    | Non-human identity anchored to a tenant (integrations, automations, background jobs) that participates in AccessControl similarly to a `Member`. |
+| ServiceAccountKey    | Tenant | No     | Credentials/API keys bound to a `ServiceAccount` with scopes, rotation history, and revocation metadata. |
 
 ## AI — Core
 
@@ -36,8 +38,8 @@ Notes:
 - Prompt templates, playbooks and action definitions for repeatable automations.
 - Async job management, artifacts, and embedding storage for semantic services.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                  | Scope  | Parent | Description |
+|----------------------  |--------|--------|-------------|
 | AIModel                | Global | Yes    | Registry of available AI models (GPT, Claude, Llama, vision/proprietary) with capability definitions, cost structures, and performance characteristics                      |
 | AIModelVersion         | Global | No     | Version tracking for models (semantic versions, fine-tuned variants, compatibility notes)                                                                                   |
 | AIPromptTemplate       | Global | No     | Parametric prompt templates for summarization, extraction, classification, entity recognition, and decision support                                                         |
@@ -58,8 +60,8 @@ Notes:
 - Document indexing with chunking and vector embeddings for semantic retrieval.
 - Document history and attachment lineage for traceability.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                  | Scope  | Parent | Description |
+|----------------------  |--------|--------|-------------|
 | AIDocumentIndex        | Tenant | Yes    | Searchable document corpus with semantic chunking, vector embeddings, and metadata extraction for hybrid retrieval                                                          |
 | AIDocumentChunk        | Tenant | No     | Segmented document fragments with embedded vectors and relevance scoring for efficient retrieval                                                                            |
 | AIOCRResult            | Tenant | No     | OCR results for scanned PDFs, images, and handwritten documents with confidence and positional data                                                                         |
@@ -80,8 +82,8 @@ Notes:
 - Predictions, forecasts, trend series, anomalies, and what-if simulations for planning.
 - Attachments and human feedback for validation and audit.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                  | Scope  | Parent | Description |
+|----------------------  |--------|--------|-------------|
 | AIInsight              | Tenant | Yes    | AI-generated business insights (overpriced lines, schedule risks, margin erosion, vendor anomalies)                                                                         |
 | AIInsightHistory       | Tenant | No     | Temporal evolution of insights with updated confidence, actions taken, and outcomes                                                                                         |
 | AIPrediction           | Tenant | No     | Predictive outputs (CTC forecasts, schedule risk, revenue, expenses, cash flow) with confidence intervals                                                                   |
@@ -103,8 +105,8 @@ Notes:
 - Condition-based routing using document attributes and risk.
 - Full auditability with user attribution and timestamps.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                 | Scope  | Parent | Description |
+|---------------------- |--------|--------|-------------|
 | ApprovalRequest       | Tenant | Yes    | Universal approval container for any entity (estimate, invoice, CO, PO), supporting configurable routing, delegation, and deadlines                                                                                               |
 | ApprovalRule          | Tenant | No     | Business rules establishing approval requirements by amount, department, document type, risk thresholds, contract values, and composite criteria                                                                                  |
 | ApprovalLevel         | Tenant | No     | Tier definitions supporting sequential and parallel chains (operational, management, executive, final sign-off)                                                                                                                   |
@@ -116,33 +118,6 @@ Notes:
 | ApprovalAttachment    | Tenant | No     | Supporting documentation and evidence (source docs, memos, financials) required for decisions                                                                                                                                     |
 | ApprovalHistoryEvent  | Tenant | No     | Comprehensive audit trail of submission, routing, decisions, escalations, cancellations, and completion with full attribution                                                                                                     |
 
-## Bidding
-
-Strategic purpose: Enterprise bid management spanning invitations, submissions, Q&A, addenda, alternates, scoring, comparison, and award decisions.
-
-Notes:
-- Complete bid lifecycle: solicit, invite, submit, compare, evaluate, award.
-- Alternates, addenda, and Q&A with distribution to all invitees.
-- Weighted scoring across technical, financial, schedule, and risk.
-- Traceable history from publication to post-award documentation.
-
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Bid                | Tenant | Yes    | Bid/RFQ/RFP container for subcontractor procurement including scope definition, schedule requirements, qualification criteria, deliverables, and evaluation framework                                                             |
-| BidInvitation      | Tenant | No     | Vendor/subcontractor invitations with status, delivery confirmation, acknowledgment, intent to bid, and pre-bid participation history                                                                                            |
-| BidSubmission      | Tenant | No     | Complete response from invitees including technical proposal, pricing breakdown, schedule commitment, qualifications, bonding, and attachments                                                                                   |
-| BidLineItem        | Tenant | No     | Detailed cost breakdown items (labor, materials, equipment, subs, overhead, profit) with unit prices, quantities, and extended totals for apples-to-apples comparison                                                             |
-| BidScope           | Tenant | No     | Scope of work with explicit inclusions/exclusions, performance specs, quality standards, codes, and clarifications                                                                                                                |
-| BidAddendum        | Tenant | No     | Official clarifications and scope/schedule changes issued during bidding period and distributed to all invitees                                                                                                                   |
-| BidAlternate       | Tenant | No     | Optional pricing scenarios and value engineering alternatives with documented assumptions, impacts, and benefits                                                                                                                  |
-| BidQuestion        | Tenant | No     | Vendor/subcontractor questions seeking clarification on scope, specs, site conditions, schedule, or terms                                                                                                                         |
-| BidAnswer          | Tenant | No     | Official responses to bidder questions distributed to all parties and incorporated into requirements                                                                                                                              |
-| BidComparison      | Tenant | No     | Side-by-side comparison matrix across cost, schedule, qualifications, methods, alternates, and compliance enabling data-driven award decisions                                                                                    |
-| BidEvaluation      | Tenant | No     | Evaluation records assessing technical capability, financial strength, schedule feasibility, safety, past performance, and resource availability                                                                                   |
-| BidScore           | Tenant | No     | Weighted scoring results across price, quality, experience, risk, and strategic fit                                                                                                                                               |
-| BidAttachment      | Tenant | No     | Supporting documents (insurance, bonding capacity, references, equipment, safety programs, statements of qualifications)                                                                                                          |
-| BidHistoryEvent    | Tenant | No     | Full audit trail from solicitation through invitation, pre-bid, addenda, submission, evaluation, award, and post-award                                                                                                            |
-
 ## Billing
 
 Strategic purpose: Enterprise billing and AR with progress/milestone/T&M billing, retainage, deposits, payment application, aging, and collections.
@@ -153,8 +128,8 @@ Notes:
 - Dunning/collections with audit history of billing lifecycle.
 - Integrates with projects and milestones for billing triggers.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                       | Scope  | Parent | Description |
+|-----------------------------|--------|--------|-------------|
 | BillingSchedule             | Tenant | Yes    | Master billing configuration defining T&M, milestone, % complete, deposit structures, retainage terms, and timing aligned with deliverables                                                                                      |
 | BillingMilestone            | Tenant | No     | Project-linked billing events (e.g., 50% rough-in, concrete pour, framing complete, final walkthrough) with verification rules                                                                                                   |
 | BillingProgress             | Tenant | No     | Percentage of completion billing (AIA G702/G703) tracking work completed, stored materials, retainage, and current payment calculations                                                                                           |
@@ -175,19 +150,19 @@ Notes:
 - Cost and schedule impact analysis with milestone effects.
 - Linked RFIs, drawings, calculations, and client correspondence.
 - Versioned revisions prior to final approval.
+- Approval workflows are orchestrated through the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.) instead of ChangeOrder-specific approval tables.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ChangeOrder              | Tenant | Yes    | Formal, approved contract modifications documenting scope/cost/time changes, origin/justification, pricing method (fixed or T&M), client authorization, and links to source estimate and active project                          |
-| ChangeOrderLineItem      | Tenant | No     | Detailed change impacts (labor, materials, equipment, subcontract, markup) with variance against original budget                                                                                                                 |
-| ChangeOrderReason        | Tenant | No     | Categorized reasons (owner request, field condition, design change, code update, RFI clarification) for trend analysis and dispute resolution                                                                                    |
-| ChangeOrderImpact        | Tenant | No     | Financial impact analysis (positive/negative) across direct (materials, labor, equipment) and indirect (overhead, general conditions, margin) costs                                                                              |
-| ChangeOrderScheduleImpact| Tenant | No     | Critical path and milestone impacts (days added/recovered, affected deliverables, resource reallocation, substantial completion modifications)                                                                                    |
-| ChangeOrderScope         | Tenant | No     | Comprehensive scope statement including work added/deleted, inclusions, exclusions, performance/spec references, and integration with existing contract scope                                                                     |
-| ChangeOrderAttachment    | Tenant | No     | Evidence and support (as-built photos, revised drawings, engineering calcs, sketches, RFIs, specs, client correspondence)                                                                                                        |
-| ChangeOrderApproval      | Tenant | No     | Internal and client approvals with signature authority validation, authorization limits, and audit trail                                                                                                                         |
-| ChangeOrderRevision      | Tenant | No     | Version control over negotiation iterations (V1, V2, V3) tracking cost/scope evolution to final approval                                                                                                                         |
-| ChangeOrderHistoryEvent  | Tenant | No     | Complete lifecycle audit from identification and proposal to review, negotiation, approval/rejection, contract incorporation, and billing integration                                                                             |
+| Model                   | Scope  | Parent | Description |
+|-------------------------|--------|--------|-------------|
+| ChangeOrder             | Tenant | Yes    | Formal contract modification documenting scope/cost/time changes, origin/justification, pricing method (fixed or T&M), client authorization, and links to source estimate and active project |
+| ChangeOrderLineItem     | Tenant | No     | Detailed change impacts (labor, materials, equipment, subcontract, markup) with variance against original budget                                                            |
+| ChangeOrderReason       | Tenant | No     | Categorized reasons (owner request, field condition, design change, code update, RFI clarification) for trend analysis and dispute resolution                               |
+| ChangeOrderImpact       | Tenant | No     | Financial impact analysis (positive/negative) across direct (materials, labor, equipment) and indirect (overhead, general conditions, margin) costs                         |
+| ChangeOrderScheduleImpact | Tenant | No   | Critical path and milestone impacts (days added/recovered, affected deliverables, resource reallocation, substantial completion modifications)                              |
+| ChangeOrderScope        | Tenant | No     | Comprehensive scope statement including work added/deleted, inclusions, exclusions, performance/spec references, and integration with existing contract scope              |
+| ChangeOrderAttachment   | Tenant | No     | Evidence and support (as-built photos, revised drawings, engineering calcs, sketches, RFIs, specs, client correspondence)                                                   |
+| ChangeOrderRevision     | Tenant | No     | Version control over negotiation iterations (V1, V2, V3) tracking cost/scope evolution to final approval                                                                    |
+| ChangeOrderHistoryEvent | Tenant | No     | Complete lifecycle audit from identification and proposal to review, negotiation, approval/rejection, contract incorporation, and billing integration                       |
 
 ## CRM — Core
 
@@ -195,21 +170,22 @@ Strategic purpose: Nucleus of customer/account data — master accounts, contact
 
 Notes:
 - Canonical account and contact records linked to billing, projects, and interactions.
+- External participants with portal access are represented as `Member` records of type EXTERNAL_CLIENT / PARTNER and linked back to CRM accounts/contacts via the membership directory.
 - Support for multiple address types and rich interaction logging with attachments.
 - Tagging and activity tables for segmentation and operational tasks.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CRMAccount              | Tenant | Yes    | Primary customer account representing companies, owners, property managers, or homeowner associations with billing and project links                                          |
-| CRMContact              | Tenant | No     | Individual contacts associated to accounts (owner, site supervisor, billing contact) with roles and multi-contact support                                                       |
-| CRMAddress              | Tenant | No     | Multiple address types per account/contact: billing, jobsite, shipping, corporate                                                                                             |
-| CRMInteraction          | Tenant | No     | Logged interactions (calls, meetings, emails, visits) with metadata and linkage to activities and accounts                                                                     |
-| CRMInteractionAttachment| Tenant | No     | Files, photos, recordings, and documents attached to interactions for evidence and context                                                                                    |
-| CRMNote                 | Tenant | No     | Internal notes and commentary tied to accounts, contacts, or interactions                                                                                                     |
-| CRMTag                  | Tenant | Yes    | Global tagging taxonomy (VIP, Commercial, Repeat Customer) for segmentation and operational filtering                                                                          |
-| CRMAccountTag           | Tenant | No     | Pivot mapping between `CRMAccount` and `CRMTag` for many-to-many classification                                                                                                 |
-| CRMActivity             | Tenant | No     | Actionable tasks and reminders (follow-ups, proposals, meetings) tied to accounts or contacts                                                                                  |
-| CRMHistoryEvent         | Tenant | No     | Timeline events capturing creates, updates, interactions, notes, and lifecycle changes                                                                                         |
+| Model                   | Scope  | Parent | Description |
+|-------------------------|--------|--------|-------------|
+| CRMAccount              | Tenant | Yes    | Primary customer account representing companies, owners, property managers, or homeowner associations with billing, project, and portal-linkage metadata. |
+| CRMContact              | Tenant | No     | Person-level contacts associated to accounts with roles (owner, site supervisor, billing contact) and optional linkage to a `Member` when that person has login access. |
+| CRMAddress              | Tenant | No     | Multiple address types per account/contact: billing, jobsite, shipping, corporate. |
+| CRMInteraction          | Tenant | No     | Logged interactions (calls, meetings, emails, visits) with metadata, `Actor`/`Member` attribution, and links to accounts and contacts. |
+| CRMInteractionAttachment| Tenant | No     | Files, photos, recordings, and documents attached to interactions for evidence and context. |
+| CRMNote                 | Tenant | No     | Internal notes and commentary tied to accounts, contacts, or interactions; never exposed directly to external portal users. |
+| CRMTag                  | Tenant | Yes    | Tagging taxonomy (VIP, Commercial, Repeat Customer, At-Risk) for segmentation and operational filtering. |
+| CRMAccountTag           | Tenant | No     | Many-to-many mapping between `CRMAccount` and `CRMTag`. |
+| CRMActivity             | Tenant | No     | Actionable tasks and reminders (follow-ups, proposals, meetings) tied to accounts or contacts, with ownership and due dates. |
+| CRMHistoryEvent         | Tenant | No     | Timeline events capturing creates, updates, interactions, notes, segmentation changes, and lifecycle state changes. |
 
 ## CRM — Communication
 
@@ -218,64 +194,21 @@ Strategic purpose: Omnichannel customer communication — emails, SMS, calls, an
 Notes:
 - Email, SMS, and voice call storage with attachments and delivery logs.
 - Conversation threads and read receipts for collaborative workflows.
+- Participants in threads are normalized to `Member` and/or CRM contact/account records for auditability.
 - Provider configuration for external gateway integration (Twilio, Sendgrid, etc.).
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CRMEmail                | Tenant | Yes    | Email records (sent/received) with headers, bodies, and delivery/audit information                                                                                             |
-| CRMEmailAttachment      | Tenant | No     | Attachments for emails (documents, proposals, images)                                                                                                                           |
-| CRMSMS                  | Tenant | No     | SMS message records and delivery status                                                                                                                                         |
-| CRMPhoneCall            | Tenant | No     | Phone call logs with duration, participants, and summary notes                                                                                                                  |
-| CRMPhoneCallRecording   | Tenant | No     | Call recordings or references to stored audio for compliance or review                                                                                                          |
-| CRMMessageThread        | Tenant | Yes    | Conversation threads across channels with participants and thread-level metadata                                                                                                |
-| CRMMessageParticipant   | Tenant | No     | Participants in message threads (accounts, contacts, users)                                                                                                                     |
-| CRMChannel              | Tenant | No     | Communication channel registry (email, sms, phone, in-app)                                                                                                                      |
-| CRMNotificationSetting  | Tenant | No     | Customer notification preferences and channel opt-ins                                                                                                                           |
-| CRMNotificationEvent    | Tenant | No     | Delivery and engagement events for notifications (sent, delivered, opened)                                                                                                      |
-
-## CRM — Insights
-
-Strategic purpose: Analytical and AI-driven insights — scoring, LTV, churn, engagement metrics, and historical snapshots for prioritization and forecasting.
-
-Notes:
-- Account scoring and historical snapshots for trend analysis.
-- Engagement metrics and churn/risk modeling for retention strategies.
-- Insight entities for AI-generated recommendations and audit history.
-
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CRMAccountScore         | Tenant | Yes    | Customer scoring model capturing engagement, revenue, and risk signals                                                                                                          |
-| CRMAccountScoreHistory  | Tenant | No     | Historical snapshots of account scores over time                                                                                                                                 |
-| CRMEngagementMetric     | Tenant | No     | Metrics for interactions (emails, calls, visits) used in scoring and segmentation                                                                                               |
-| CRMRiskScore            | Tenant | No     | Risk/churn scoring derived from behavior and financial indicators                                                                                                               |
-| CRMLTVSnapshot          | Tenant | No     | Periodic snapshots of customer lifetime value for cohort and trend analysis                                                                                                     |
-| CRMRevenueTrend         | Tenant | No     | Revenue trend series per account for forecasting and health checks                                                                                                               |
-| CRMWinRateSnapshot      | Tenant | No     | Historical win-rate snapshots for sales performance analysis                                                                                                                    |
-| CRMChurnRisk            | Tenant | No     | Predictive churn indicators and associated drivers                                                                                                                               |
-| CRMInsight              | Tenant | Yes    | Generated insights (AI or rules) tied to accounts and actions for recommended next steps                                                                                        |
-| CRMInsightHistory       | Tenant | No     | Audit trail of insight generation, feedback, and outcomes                                                                                                                        |
-
-## CRM — Marketing
-
-Strategic purpose: Campaign and audience management for targeted outreach, attribution, and performance tracking.
-
-Notes:
-- Campaign containers with member lists, messages, and result tracking.
-- Audience segments and criteria for reuse across campaigns.
-- Lead source and referral tracking for attribution.
-
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CRMCampaign             | Tenant | Yes    | Marketing campaign container (email series, SMS blasts, ads) with scheduling and audience targeting                                                                              |
-| CRMCampaignMember       | Tenant | No     | Accounts or contacts participating in a campaign                                                                                                                                |
-| CRMCampaignMessage      | Tenant | No     | Messages sent as part of campaigns (email, SMS, postcard)                                                                                                                       |
-| CRMCampaignResult       | Tenant | No     | Campaign outcomes: opens, clicks, conversions, appointments                                                                                                                      |
-| CRMLeadSource           | Tenant | No     | Source of leads (website, referral, ads, cold call) for attribution                                                                                                              |
-| CRMReferral             | Tenant | No     | Referral program records linking referrer → referred account                                                                                                                     |
-| CRMAudienceSegment      | Tenant | Yes    | Saved audience segments with criteria for marketing and targeting                                                                                                                 |
-| CRMAudienceCriteria     | Tenant | No     | Rules defining an audience segment (LTV > X, last job < Y)                                                                                                                       |
-| CRMMktAttachment        | Tenant | No     | Assets used in campaigns (creative files, templates)                                                                                                                              |
-| CRMMktHistoryEvent      | Tenant | No     | Marketing activity history for campaigns and segments                                                                                                                             |
+| Model                   | Scope  | Parent | Description |
+|-------------------------|--------|--------|-------------|
+| CRMEmail                | Tenant | Yes    | Email records (sent/received) with headers, bodies, delivery/audit information, and links to CRM entities. |
+| CRMEmailAttachment      | Tenant | No     | Attachments for emails (documents, proposals, images). |
+| CRMSMS                  | Tenant | No     | SMS message records and delivery status linked to contacts or members. |
+| CRMPhoneCall            | Tenant | No     | Phone call logs with duration, participants, and summary notes; integrates with recordings and CRM interactions. |
+| CRMPhoneCallRecording   | Tenant | No     | Call recordings or references to stored audio for compliance or review. |
+| CRMMessageThread        | Tenant | Yes    | Conversation threads across channels with participants, thread-level metadata, and linkage to CRM accounts/projects. |
+| CRMMessageParticipant   | Tenant | No     | Participants in message threads, normalized to `Member` (when portal or internal users are involved) and/or CRM contacts/accounts for off-platform recipients. |
+| CRMChannel              | Tenant | No     | Communication channel registry (email, SMS, phone, in-app). |
+| CRMNotificationSetting  | Tenant | No     | Customer notification preferences and channel opt-ins, keyed by contact and optionally `Member`. |
+| CRMNotificationEvent    | Tenant | No     | Delivery and engagement events for notifications (sent, delivered, opened) with attribution to the triggering `Actor`/`Member`. |
 
 ## CRM — Relationships
 
@@ -283,43 +216,45 @@ Strategic purpose: Model complex account hierarchies, partner networks, househol
 
 Notes:
 - Parent/child account hierarchies and household grouping for residential customers.
-- Relationship types for partners, subsidiaries, and decision-makers.
+- Relationship types for partners, subsidiaries, decision-makers, and influencers.
+- When relationship participants have login access, they are linked to `Member` records to unify identity and authorization.
 - Attachment and history tables for governance and audits.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CRMAccountRelationship  | Tenant | Yes    | Account-to-account relationships (parent/subsidiary, GC→Subcontractor) for complex org mapping                                                                                   |
-| CRMContactRole          | Tenant | No     | Role definitions for contacts (Decision Maker, Billing Contact)                                                                                                                   |
-| CRMAccountHierarchy     | Tenant | No     | Multi-level account hierarchy model                                                                                                                                               |
-| CRMHousehold            | Tenant | Yes    | Household grouping for residential customers with household members                                                                                                               |
-| CRMHouseholdMember      | Tenant | No     | Individuals within a household (spouse, partner, co-owner)                                                                                                                         |
-| CRMDecisionMaker        | Tenant | No     | Designated decision-maker contact for high-value approvals                                                                                                                        |
-| CRMInfluencer           | Tenant | No     | Secondary influencers (architect, consultant) impacting decisions                                                                                                                 |
-| CRMPartner              | Tenant | No     | Partner entities such as vendors, consultants, or referral networks                                                                                                               |
-| CRMRelationshipAttachment| Tenant| No     | Relationship artifacts (org charts, maps)                                                                                                                                         |
-| CRMRelationshipHistoryEvent| Tenant| No   | Timeline of changes to relationship mappings and roles                                                                                                                            |
+| Model                     | Scope  | Parent | Description |
+|---------------------------|--------|--------|-------------|
+| CRMAccountRelationship    | Tenant | Yes    | Account-to-account relationships (parent/subsidiary, GC→Subcontractor) for complex organization mapping. |
+| CRMContactRole            | Tenant | No     | Role definitions for contacts (Decision Maker, Billing Contact, Site Contact) referenced by CRM contacts and members. |
+| CRMAccountHierarchy       | Tenant | No     | Multi-level account hierarchy model including roll-up flags and reporting metadata. |
+| CRMHousehold              | Tenant | Yes    | Household grouping for residential customers with household-level attributes (credit profile, preferences). |
+| CRMHouseholdMember        | Tenant | No     | Individuals within a household (spouse, partner, co-owner) mapped to CRM contacts and optionally to `Member` records for portal access. |
+| CRMDecisionMaker          | Tenant | No     | Designated decision-maker contact for high-value opportunities with optional linkage to a `Member`. |
+| CRMInfluencer             | Tenant | No     | Secondary influencers (architect, consultant) impacting decisions, optionally linked to members or contacts. |
+| CRMPartner                | Tenant | No     | Partner entities such as vendors, consultants, or referral networks with links to vendor records and `Member` entries when they have portal access. |
+| CRMRelationshipAttachment | Tenant | No     | Relationship artifacts (org charts, diagrams, agreements) attached to relationship records. |
+| CRMRelationshipHistoryEvent| Tenant| No     | Timeline of changes to relationship mappings and roles with `Actor` attribution. |
 
 ## CustomerPortal
 
-Strategic purpose: Secure customer-facing portal delivering access to invoices, estimates, project views, messages, documents, and payments.
+Strategic purpose: Secure customer-facing portal delivering access to invoices, estimates, project views, messages, and payments on top of the global identity and membership model.
 
 Notes:
-- Tenant-scoped portal users and sessions with device/IP controls.
-- Fine-grained view permissions for invoices, projects, estimates, and documents.
-- Stored payment methods and messaging between customer and company.
+- Portal authentication uses global `User` from `identityCore`; tenant context and permissions are derived from `Member` records of type EXTERNAL_CLIENT / PARTNER.
+- No separate credential store is maintained in the portal; `CustomerPortalUser` is a portal profile bound to a `Member` plus CRM entities.
+- Fine-grained view permissions for invoices, projects, estimates, and documents are enforced via AccessControl using `Member` and scopes.
+- Stored payment methods and messaging between customer and company are audited with `Actor`/`Member` attribution.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CustomerPortalUser      | Tenant | Yes    | Portal user account (customers) with creds, contact info and links to customer accounts                                                                                       |
-| CustomerPortalSession   | Tenant | No     | Active sessions, device metadata, IP, and expiration                                                                                                                           |
-| CustomerPortalAccess    | Tenant | No     | Permissions defining which portal features are visible (invoices, projects, files, messages, estimates)                                                                        |
-| CustomerPortalProjectView| Tenant| No     | Per-project portal view permissions and linkage to project summaries                                                                                                          |
-| CustomerPortalEstimateView|Tenant| No     | Access records for estimates exposed to the customer                                                                                                                           |
-| CustomerPortalInvoiceView|Tenant | No     | Access records for invoices and payment status visible to customer                                                                                                             |
-| CustomerPortalPaymentMethod|Tenant| No    | Stored payment instruments (cards, ACH, wallets) with tokenized references                                                                                                      |
-| CustomerPortalMessage   | Tenant | No     | Messages exchanged between customer and company tied to projects or accounts                                                                                                  |
-| CustomerPortalDocument  | Tenant | No     | Documents exposed to customers (contracts, plans, photos) with download/access metadata                                                                                       |
-| CustomerPortalHistoryEvent|Tenant| No     | Portal activity events (login, view, pay) for audit and support                                                                                                                |
+| Model                       | Scope  | Parent | Description |
+|-----------------------------|--------|--------|-------------|
+| CustomerPortalUser          | Tenant | Yes    | Portal profile for an external `Member` (client/owner/partner) with UI preferences, linked CRM account/contact references, and status; authentication is via global `User`. |
+| CustomerPortalSession       | Tenant | No     | Portal session records referencing global `Session` and resolving to a `Member` context, with device metadata, IP, and expiration. |
+| CustomerPortalAccess        | Tenant | No     | High-level portal feature entitlements (invoices, projects, files, messages, estimates) bound to a `Member` and backed by AccessControl roles/policies. |
+| CustomerPortalProjectView   | Tenant | No     | Per-project portal view permissions tying `Member`/portal users to project summaries and available actions. |
+| CustomerPortalEstimateView  | Tenant | No     | Access records for estimates exposed to specific external members for review/approval. |
+| CustomerPortalInvoiceView   | Tenant | No     | Access records for invoices and payment status visible to customers, including masking of internal-only fields. |
+| CustomerPortalPaymentMethod | Tenant | No     | Tokenized stored payment instruments (cards, ACH, wallets) associated with a `Member` and CRM account for reuse within the portal. |
+| CustomerPortalMessage       | Tenant | No     | Messages exchanged between customer and company tied to projects, accounts, or estimates, referencing sender/recipient `Member` records. |
+| CustomerPortalDocument      | Tenant | No     | Documents exposed to customers (contracts, plans, photos) with access metadata and links back to core document records. |
+| CustomerPortalHistoryEvent  | Tenant | No     | Portal activity events (login, view, download, pay, message send) for audit, analytics, and support. |
 
 ## Analytics Core
 
@@ -436,8 +371,8 @@ Notes:
 - Attachments, reactions, mentions, pins and visibility rules for project contexts.
 - Audit trail for edits/deletes and message history.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                   | Scope  | Parent | Description                                                                                                                                      |
+| --------------------    | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | MessageThread           | Tenant | Yes    | Conversation container (1:1, group, project channel) with metadata and participants                                                                                             |
 | Message                 | Tenant | No     | Individual message payloads: text, files, emojis, audio                                                                                                                         |
 | MessageParticipant      | Tenant | No     | Participants in a thread (users, accounts, system bots)                                                                                                                         |
@@ -458,8 +393,8 @@ Notes:
 - Link email threads to projects, RFIs, invoices and other entities.
 - Support bulk campaigns and template reuse.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                   | Scope  | Parent | Description                                                                                                                                      |
+| --------------------    | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | EmailMessage            | Tenant | Yes    | Email stored in ERP with headers, body, and thread links                                                                                                                       |
 | EmailRecipient          | Tenant | No     | Recipient rows for To/CC/BCC with delivery status                                                                                                                              |
 | EmailAttachment         | Tenant | No     | Files attached to emails                                                                                                                                                       |
@@ -480,8 +415,8 @@ Notes:
 - Call sessions with recordings, IVR menus, queues, and number pools.
 - Configurable providers (Twilio, Plivo) per tenant.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                   | Scope  | Parent | Description                                                                                                                                      |
+| --------------------    | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | SMSMessage              | Tenant | Yes    | Inbound/outbound SMS message records with status and metadata                                                                                                                   |
 | SMSAttachment           | Tenant | No     | Media attached to SMS messages                                                                                                                                                 |
 | SMSHistoryEvent         | Tenant | No     | Timeline events for SMS (sent, delivered, failed)                                                                                                                              |
@@ -502,8 +437,8 @@ Notes:
 - Periodic checks, violations, correction actions and formal audits.
 - Training records and full compliance history for reporting and insurance.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                   | Scope  | Parent | Description                                                                                                                                      |
+| --------------------    | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | ComplianceRequirement   | Tenant | Yes    | Legal or contractual requirement (OSHA, codes, permits, bonding) with linkage to projects and contracts                                                                        |
 | ComplianceDocument      | Tenant | No     | Certifications, COIs, permits, SDS, inspection reports                                                                                                                         |
 | ComplianceCheck         | Tenant | No     | Periodic or event-driven compliance checks and results                                                                                                                         |
@@ -524,8 +459,8 @@ Notes:
 - Amendments and signatures with evidence attachments.
 - Contract-level compliance and history tracking separate from change orders.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Model                   | Scope  | Parent | Description                                                                                                                                      |
+| --------------------    | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Contract                | Tenant | Yes    | Master contract record (customer or subcontractor) with value, scope, term, type and lifecycle status                                                                           |
 | ContractScope           | Tenant | No     | Description of inclusions and exclusions for the contract                                                                                                                     |
 | ContractTerm            | Tenant | No     | Legal terms and conditions including payment terms, insurance, and warranties                                                                                                  |
@@ -545,26 +480,27 @@ Notes:
 - Revision history with immutable snapshots for audit trails and comparison analysis.
 - Sectioned estimates with granular line-item details, taxes, fees, assumptions, and exclusions.
 - Template-based estimation and public links for client review and acceptance workflows.
+- Approval workflows for estimates are orchestrated through the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.) instead of module-specific `EstimateApproval` tables.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Estimate                | Tenant | Yes    | Master estimate entity representing formal cost opportunity with customer, status, totals, margin, active revision, and ownership assignment                                   |
-| EstimateRevision        | Tenant | No     | Immutable revision snapshots capturing point-in-time estimate state for audit trails and comparison workflows                                                                  |
-| EstimateSection         | Tenant | No     | Section groupings within revisions organizing estimate by trade or category (Plumbing, Electrical, Excavation, etc.)                                                          |
-| EstimateLineItem        | Tenant | No     | Individual cost components with quantity, unit cost, markup, margin, item type, unit of measure, and extended calculations                                                     |
-| EstimateTax             | Tenant | No     | Tax calculations applied at revision or line level including sales tax, VAT, environmental fees, and local assessments                                                         |
-| EstimateDiscount        | Tenant | No     | Discount applications at estimate or section level with percentage or fixed amount reductions                                                                                  |
-| EstimateFee             | Tenant | No     | Additional charges including overhead, contingency fees, general conditions, and management fees                                                                               |
-| EstimateTerm            | Tenant | No     | Contractual and payment terms included with estimate submissions for client acceptance                                                                                         |
-| EstimateAssumption      | Tenant | No     | Declared assumptions for scope clarity and risk mitigation (access requirements, site conditions, material availability)                                                       |
-| EstimateExclusion       | Tenant | No     | Explicit scope exclusions and items not covered by the estimate                                                                                                               |
-| EstimateAlternate       | Tenant | No     | Optional alternates and value engineering options with associated cost implications                                                                                            |
-| EstimateAttachment      | Tenant | No     | Supporting documents including drawings, specifications, BOQs, photos, and reference materials                                                                                 |
-| EstimateComment         | Tenant | No     | Internal comments and discussions for collaboration and decision tracking                                                                                                      |
-| EstimateApproval        | Tenant | No     | Approval workflow entries with multiple approval levels and stakeholder sign-offs                                                                                             |
-| EstimateComparison      | Tenant | No     | Comparison containers for analyzing multiple bids, revisions, and competitive assessments                                                                                      |
-| EstimateHistoryEvent    | Tenant | No     | Comprehensive audit trail capturing estimate lifecycle events, status changes, and stakeholder activities                                                                     |
-| EstimatePublicLink      | Tenant | No     | Public access links enabling client review, acceptance, and feedback collection without system access                                                                         |
+| Model                | Scope  | Parent | Description                                                                                                                                      |
+| -------------------- | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Estimate             | Tenant | Yes    | Master estimate entity representing formal cost opportunity with customer, status, totals, margin, active revision, and ownership assignment    |
+| EstimateRevision     | Tenant | No     | Immutable revision snapshots capturing point-in-time estimate state for audit trails and comparison workflows                                   |
+| EstimateSection      | Tenant | No     | Section groupings within revisions organizing estimate by trade or category (Plumbing, Electrical, Excavation, etc.)                           |
+| EstimateLineItem     | Tenant | No     | Individual cost components with quantity, unit cost, markup, margin, item type, unit of measure, and extended calculations                      |
+| EstimateTax          | Tenant | No     | Tax calculations applied at revision or line level including sales tax, VAT, environmental fees, and local assessments                          |
+| EstimateDiscount     | Tenant | No     | Discount applications at estimate or section level with percentage or fixed amount reductions                                                   |
+| EstimateFee          | Tenant | No     | Additional charges including overhead, contingency fees, general conditions, and management fees                                                |
+| EstimateTerm         | Tenant | No     | Contractual and payment terms included with estimate submissions for client acceptance                                                          |
+| EstimateAssumption   | Tenant | No     | Declared assumptions for scope clarity and risk mitigation (access requirements, site conditions, material availability)                        |
+| EstimateExclusion    | Tenant | No     | Explicit scope exclusions and items not covered by the estimate                                                                                 |
+| EstimateAlternate    | Tenant | No     | Optional alternates and value engineering options with associated cost implications                                                             |
+| EstimateAttachment   | Tenant | No     | Supporting documents including drawings, specifications, BOQs, photos, and reference materials                                                  |
+| EstimateComment      | Tenant | No     | Internal comments and discussions for collaboration and decision tracking                                                                       |
+| EstimateComparison   | Tenant | No     | Comparison containers for analyzing multiple bids, revisions, and competitive assessments                                                       |
+| EstimateHistoryEvent | Tenant | No     | Comprehensive audit trail capturing estimate lifecycle events, status changes, and stakeholder activities                                      |
+| EstimatePublicLink   | Tenant | No     | Public access links enabling client review, acceptance, and feedback collection without system access                                          |
+
 
 ## expensesCore
 
@@ -574,19 +510,20 @@ Notes:
 - Expense reports containing multiple line items with receipt attachment and policy validation.
 - Automated policy enforcement with violation detection and escalation workflows.
 - Integration with reimbursement processing and financial reporting systems.
+- Approval workflows for expense reports are orchestrated through the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.) instead of module-specific `ExpenseApproval` tables.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ExpenseReport           | Tenant | Yes    | Employee-submitted expense containers with departmental allocation, project linkage, approval status, and reimbursement tracking                                            |
-| ExpenseLine             | Tenant | No     | Individual expense items including mileage, meals, lodging, materials with categorization and receipt requirements                                                          |
-| ExpenseCategory         | Tenant | No     | Expense classification taxonomy for reporting and policy application (Meals, Travel, Office Supplies, Fuel, Lodging)                                                       |
-| ExpenseReceipt          | Tenant | No     | Receipt images and metadata with OCR integration for automated data extraction and validation                                                                               |
-| ExpenseApproval         | Tenant | No     | Multi-level approval workflows with manager, finance, and accounting stakeholder participation                                                                              |
-| ExpensePolicy           | Tenant | No     | Business rules and spending limits including daily maximums, mileage rates, and category restrictions                                                                       |
-| ExpensePolicyViolation  | Tenant | No     | Automated violation detection for policy breaches including amount limits, missing receipts, and unauthorized vendors                                                       |
-| ExpensePayment          | Tenant | No     | Reimbursement records linking to payroll systems and corporate card reconciliation processes                                                                                |
-| ExpenseAttachment       | Tenant | No     | Supplemental documentation including emails, supporting files, and additional evidence                                                                                       |
-| ExpenseHistoryEvent     | Tenant | No     | Complete timeline tracking submission, review, approval, rejection, and reimbursement activities                                                                            |
+| Model                  | Scope  | Parent | Description                                                                                                                                  |
+| ---------------------- | ------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| ExpenseReport          | Tenant | Yes    | Employee-submitted expense containers with departmental allocation, project linkage, approval status, and reimbursement tracking            |
+| ExpenseLine            | Tenant | No     | Individual expense items including mileage, meals, lodging, materials with categorization and receipt requirements                          |
+| ExpenseCategory        | Tenant | No     | Expense classification taxonomy for reporting and policy application (Meals, Travel, Office Supplies, Fuel, Lodging)                        |
+| ExpenseReceipt         | Tenant | No     | Receipt images and metadata with OCR integration for automated data extraction and validation                                               |
+| ExpensePolicy          | Tenant | No     | Business rules and spending limits including daily maximums, mileage rates, and category restrictions                                       |
+| ExpensePolicyViolation | Tenant | No     | Automated violation detection for policy breaches including amount limits, missing receipts, and unauthorized vendors                       |
+| ExpensePayment         | Tenant | No     | Reimbursement records linking to payroll systems and corporate card reconciliation processes                                                |
+| ExpenseAttachment      | Tenant | No     | Supplemental documentation including emails, supporting files, and additional evidence                                                      |
+| ExpenseHistoryEvent    | Tenant | No     | Complete timeline tracking submission, review, approval, rejection, and reimbursement activities (with approvals linked via Approvals module)|
+
 
 ## expenses
 
@@ -617,19 +554,21 @@ Notes:
 - Comprehensive chart of accounts supporting multi-dimensional segmentation and hierarchical organization.
 - Fiscal year and period management with configurable calendars and closing procedures.
 - Manual journal entry capabilities with approval workflows and audit trails.
+- Approval workflows for journals are orchestrated through the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.) — no GL-specific approval tables.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| GLAccount               | Tenant | Yes    | Chart of accounts structure encompassing assets, liabilities, equity, revenue, and expense classifications with hierarchical organization                                   |
-| GLAccountCategory       | Tenant | No     | High-level account groupings including Assets, Liabilities, Equity, Income, and Expense for financial statement organization                                                |
-| GLAccountSegment        | Tenant | No     | Optional multi-dimensional segmentation supporting department, location, division, and project-based reporting requirements                                                 |
-| GLFiscalYear            | Tenant | No     | Fiscal year boundary definitions with configurable start dates and closing procedures                                                                                       |
-| GLFiscalPeriod          | Tenant | No     | Fiscal periods within years supporting monthly, 4-4-5, and custom calendar configurations with opening and closing controls                                                |
-| GLJournal               | Tenant | Yes    | Manual journal entry containers for adjusting entries, accruals, and corrections with approval workflows                                                                   |
-| GLJournalLine           | Tenant | No     | Individual debit and credit lines within journal entries with account allocation and dimensional analysis                                                                   |
-| GLPostingBatch          | Tenant | No     | Transaction posting batches for controlled financial data processing and audit trail maintenance                                                                            |
-| GLTrialBalanceSnapshot  | Tenant | No     | Point-in-time trial balance captures for reporting, analysis, and audit preparation                                                                                         |
-| GLHistoryEvent          | Tenant | No     | Comprehensive audit trail for chart of accounts modifications, period management, and journal entry activities                                                             |
+| Model                  | Scope  | Parent | Description                                                                                                                                  |
+|------------------------|--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| GLAccount              | Tenant | Yes    | Chart of accounts structure encompassing assets, liabilities, equity, revenue, and expense classifications with hierarchical organization   |
+| GLAccountCategory      | Tenant | No     | High-level account groupings including Assets, Liabilities, Equity, Income, and Expense for financial statement organization                |
+| GLAccountSegment       | Tenant | No     | Optional multi-dimensional segmentation supporting department, location, division, and project-based reporting requirements                 |
+| GLFiscalYear           | Tenant | No     | Fiscal year boundary definitions with configurable start dates and closing procedures                                                       |
+| GLFiscalPeriod         | Tenant | No     | Fiscal periods within years supporting monthly, 4-4-5, and custom calendar configurations with opening and closing controls                |
+| GLJournal              | Tenant | Yes    | Manual journal entry containers for adjusting entries, accruals, and corrections, with approval routing via the central Approvals module   |
+| GLJournalLine          | Tenant | No     | Individual debit and credit lines within journal entries with account allocation and dimensional analysis                                   |
+| GLPostingBatch         | Tenant | No     | Transaction posting batches for controlled financial data processing and audit trail maintenance                                            |
+| GLTrialBalanceSnapshot | Tenant | No     | Point-in-time trial balance captures for reporting, analysis, and audit preparation                                                         |
+| GLHistoryEvent         | Tenant | No     | Comprehensive audit trail for chart of accounts modifications, period management, and journal entry activities                             |
+
 
 ## accountingTransaction
 
@@ -639,19 +578,19 @@ Notes:
 - Unified transaction model supporting accounts receivable, accounts payable, inventory, payroll, and general ledger entries.
 - Source document linkage maintaining traceability to originating business transactions.
 - Multi-dimensional allocation support for cost center, department, and project accounting.
+- Approval workflows for high-risk or high-value transactions are orchestrated through the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.), not a module-specific `TransactionApproval` table.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Transaction             | Tenant | Yes    | Universal financial event container representing all monetary activities including sales, purchases, payments, and adjustments                                             |
-| TransactionLine         | Tenant | No     | Individual debit and credit components with account assignments and dimensional attributes                                                                                  |
-| TransactionSourceLink   | Tenant | No     | Traceability links connecting transactions to source documents including invoices, purchase orders, and payroll runs                                                       |
-| TransactionType         | Tenant | No     | Transaction categorization including Revenue, Accounts Payable, Accounts Receivable, Inventory Adjustments, and Payroll classifications                                   |
-| TransactionBatch        | Tenant | No     | Grouping mechanism for related transactions processed together with batch-level controls and validation                                                                     |
-| TransactionApproval     | Tenant | No     | Approval workflow management for high-risk or high-value transactions with multi-level authorization                                                                       |
-| TransactionAttachment   | Tenant | No     | Supporting documentation including invoices, receipts, contracts, and approval evidence with version control                                                               |
-| TransactionReversal     | Tenant | No     | Reversal entry management for error correction and period adjustments with audit trail preservation                                                                        |
-| TransactionAllocation   | Tenant | No     | Cost distribution across multiple dimensions including departments, cost centers, projects, and locations                                                                  |
-| TransactionHistoryEvent | Tenant | No     | Comprehensive audit trail capturing transaction lifecycle including creation, modification, approval, and posting activities                                               |
+| Model                   | Scope  | Parent | Description                                                                                                                                  |
+|-------------------------|--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| Transaction             | Tenant | Yes    | Universal financial event container representing all monetary activities including sales, purchases, payments, and adjustments             |
+| TransactionLine         | Tenant | No     | Individual debit and credit components with account assignments and dimensional attributes                                                  |
+| TransactionSourceLink   | Tenant | No     | Traceability links connecting transactions to source documents including invoices, purchase orders, and payroll runs                       |
+| TransactionType         | Tenant | No     | Transaction categorization including Revenue, Accounts Payable, Accounts Receivable, Inventory Adjustments, and Payroll classifications    |
+| TransactionBatch        | Tenant | No     | Grouping mechanism for related transactions processed together with batch-level controls and validation                                    |
+| TransactionAttachment   | Tenant | No     | Supporting documentation including invoices, receipts, contracts, and approval evidence with version control                               |
+| TransactionReversal     | Tenant | No     | Reversal entry management for error correction and period adjustments with audit trail preservation                                        |
+| TransactionAllocation   | Tenant | No     | Cost distribution across multiple dimensions including departments, cost centers, projects, and locations                                  |
+| TransactionHistoryEvent | Tenant | No     | Comprehensive audit trail capturing transaction lifecycle including creation, modification, approval routing, and posting activities       |
 
 ## banking
 
@@ -661,19 +600,21 @@ Notes:
 - Multi-bank connectivity through standardized APIs and file-based feeds with automated transaction import.
 - Sophisticated reconciliation engine with rule-based matching and exception handling capabilities.
 - Cash position monitoring and inter-account transfer management for optimal liquidity control.
+- Approval workflows for sensitive operations (e.g., large `BankTransfer`) are orchestrated through the central **Approvals** module, not banking-specific approval tables.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| BankAccount             | Tenant | Yes    | Company bank account registry with account details, balances, and connectivity configuration for automated processing                                                      |
-| BankTransaction         | Tenant | No     | Imported bank feed transactions with merchant details, amounts, and categorization for reconciliation processing                                                           |
-| BankReconciliation      | Tenant | Yes    | Monthly reconciliation sessions linking bank statement items to ERP transactions with variance analysis                                                                    |
-| BankReconciliationItem  | Tenant | No     | Individual matching records between bank transactions and ERP entries with confidence scoring and manual override capabilities                                             |
-| BankFeedConnection      | Tenant | No     | Integration connectivity configurations for Plaid, Stripe, ACH gateways, and direct bank APIs with authentication management                                              |
-| BankStatement           | Tenant | No     | Monthly statement storage with metadata extraction and transaction detail preservation                                                                                      |
-| BankRule                | Tenant | No     | Automated categorization and matching rules for recurring transactions and vendor identification                                                                           |
-| BankTransfer            | Tenant | No     | Inter-account transfer records with approval workflows and cash flow impact tracking                                                                                       |
-| BankDeposit             | Tenant | No     | Deposit documentation and batch processing with source transaction linkage and clearing management                                                                         |
-| BankHistoryEvent        | Tenant | No     | Comprehensive audit trail for banking operations including account setup, reconciliation activities, and configuration changes                                            |
+| Model                  | Scope  | Parent | Description                                                                                                                                  |
+|------------------------|--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| BankAccount            | Tenant | Yes    | Company bank account registry with account details, balances, and connectivity configuration for automated processing                      |
+| BankTransaction        | Tenant | No     | Imported bank feed transactions with merchant details, amounts, and categorization for reconciliation processing                           |
+| BankReconciliation     | Tenant | Yes    | Monthly reconciliation sessions linking bank statement items to ERP transactions with variance analysis                                    |
+| BankReconciliationItem | Tenant | No     | Individual matching records between bank transactions and ERP entries with confidence scoring and manual override capabilities             |
+| BankFeedConnection     | Tenant | No     | Integration connectivity configurations for Plaid, Stripe, ACH gateways, and direct bank APIs with authentication management              |
+| BankStatement          | Tenant | No     | Monthly statement storage with metadata extraction and transaction detail preservation                                                      |
+| BankRule               | Tenant | No     | Automated categorization and matching rules for recurring transactions and vendor identification                                           |
+| BankTransfer           | Tenant | No     | Inter-account transfer records with linkage to approvals via the central Approvals module and cash flow impact tracking                    |
+| BankDeposit            | Tenant | No     | Deposit documentation and batch processing with source transaction linkage and clearing management                                         |
+| BankHistoryEvent       | Tenant | No     | Comprehensive audit trail for banking operations including account setup, reconciliation activities, and configuration changes             |
+
 
 ## tax&AccountingCompliance
 
@@ -699,25 +640,25 @@ Notes:
 
 ## hrCore
 
-Strategic purpose: Employee record management with comprehensive HR data including positions, compensation, skills, documentation, and organizational structure maintenance.
+Strategic purpose: Employee record management with comprehensive worker lifecycle, skills, documentation, and organizational structure maintenance.
 
 Notes:
-- Central employee registry with personal information, addresses, and contact details management.
-- Position and compensation tracking with department assignments and skill certifications.
-- Document management for employment agreements, compliance forms, and HR records.
+- `Employee` is the HR representation of an internal worker within a tenant and is always linked 1:1 to a `Member` of type INTERNAL.
+- A single natural person may have multiple `Employee` records across tenants but only one global `User` in `identityCore`.
+- HR data flows into time & attendance, payroll, safety, and compliance; it is not used directly for authentication or authorization.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Employee                | Tenant | Yes    | Master employee record containing personal information, employment status, and organizational assignments with comprehensive profile management                             |
-| EmployeeAddress         | Tenant | No     | Employee address records supporting multiple address types including home, work, and emergency contact locations                                                           |
-| EmployeeContact         | Tenant | No     | Contact information including phone numbers, email addresses, and emergency contact details with priority and relationship classifications                                 |
-| EmployeePosition        | Tenant | No     | Current job position assignment with title, department, reporting structure, and effective date management                                                                 |
-| EmployeeDepartment      | Tenant | No     | Department assignment records with cost center allocation and organizational hierarchy tracking                                                                            |
-| EmployeeCompensation    | Tenant | No     | Compensation structure including salary, hourly rates, bonus eligibility, and pay grade classifications with effective date tracking                                      |
-| EmployeeStatus          | Tenant | No     | Employment status tracking including active, terminated, on-leave, and suspended classifications with reason codes and effective dates                                    |
-| EmployeeSkill           | Tenant | No     | Employee skills and certifications registry with proficiency levels, certification dates, and renewal requirements                                                        |
-| EmployeeDocument        | Tenant | No     | Employment documentation including contracts, tax forms, agreements, and compliance records with version control and expiration tracking                                  |
-| EmployeeHistoryEvent    | Tenant | No     | Comprehensive audit trail capturing employment changes including role changes, salary adjustments, department transfers, and status modifications                        |
+| Model               | Scope  | Parent | Description |
+|---------------------|--------|--------|-------------|
+| Employee            | Tenant | Yes    | Master employee/worker record linked to a `Member` (INTERNAL) capturing personal data, identifiers, employment status, and primary HR attributes. |
+| EmployeeAddress     | Tenant | No     | Managed addresses for employees (home, mailing, emergency) with effective dating and privacy flags. |
+| EmployeeContact     | Tenant | No     | Contact channels (phone, email, emergency contacts) for HR and safety communication. |
+| EmployeePosition    | Tenant | No     | Employee's position or job assignment within the organization, including effective dates and reporting relationships. |
+| EmployeeDepartment  | Tenant | No     | Department / org unit assignments for employees, including cost center metadata and hierarchy references. |
+| EmployeeCompensation| Tenant | No     | Compensation records for employees (base, overtime rules, allowances) feeding payroll and budget planning. |
+| EmployeeStatus      | Tenant | No     | Employment status records (active, leave, terminated, seasonal) with reasons and effective periods. |
+| EmployeeSkill       | Tenant | No     | Skills, certifications, and qualifications associated to employees with proficiency levels and expiry. |
+| EmployeeDocument    | Tenant | No     | HR documents and attachments (contracts, compliance forms, licenses) linked to employees. |
+| EmployeeHistoryEvent| Tenant | No     | Audited lifecycle events for employees (hire, promotion, pay change, leave, termination) with `Actor`/`Member` attribution. |
 
 ## payrollEngine
 
@@ -727,19 +668,21 @@ Notes:
 - Automated payroll run execution with multi-pay-period support and complex earning calculations.
 - Integrated tax calculation supporting federal, state, and local tax obligations with automatic updates.
 - Benefits administration with deduction management and direct deposit capabilities.
+- Approval workflows for payroll runs are orchestrated through the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.), not payroll-specific approval tables.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| PayrollRun              | Tenant | Yes    | Payroll cycle execution container managing pay period processing, calculation status, and approval workflows with audit controls                                          |
-| PayrollEarning          | Tenant | No     | Individual earning components including regular wages, overtime, bonuses, commissions, and special payments with calculation rules and tax implications                   |
-| PayrollDeduction        | Tenant | No     | Payroll deductions including benefits, garnishments, retirement contributions, and voluntary deductions with regulatory compliance tracking                               |
-| PayrollTax              | Tenant | No     | Tax calculations and withholdings by jurisdiction including federal, state, local, and FICA taxes with detailed breakdowns per employee                                  |
-| PayrollCalendar         | Tenant | No     | Pay period definitions supporting weekly, bi-weekly, semi-monthly, and monthly cycles with holiday and processing date management                                         |
-| PayrollBenefit          | Tenant | No     | Employee benefit configurations including health, dental, vision, retirement plans, and flexible spending accounts with enrollment and cost management                   |
-| PayrollGarnishment      | Tenant | No     | Court-ordered garnishments including child support, wage garnishments, and tax levies with calculation rules and compliance tracking                                      |
-| PayrollCheck            | Tenant | No     | Physical and electronic paycheck records with check numbers, payment amounts, and delivery method tracking                                                                |
-| PayrollDirectDeposit    | Tenant | No     | Direct deposit configurations and processing records with bank account information, split allocations, and transaction confirmations                                     |
-| PayrollHistoryEvent     | Tenant | No     | Comprehensive audit trail for payroll processing activities including run execution, corrections, and regulatory reporting                                                |
+| Model                | Scope  | Parent | Description                                                                                                                                 |
+|----------------------|--------|--------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| PayrollRun           | Tenant | Yes    | Payroll cycle execution container managing pay period processing, calculation status, and approval routing via the central Approvals module with audit controls |
+| PayrollEarning       | Tenant | No     | Individual earning components including regular wages, overtime, bonuses, commissions, and special payments with calculation rules and tax implications          |
+| PayrollDeduction     | Tenant | No     | Payroll deductions including benefits, garnishments, retirement contributions, and voluntary deductions with regulatory compliance tracking                      |
+| PayrollTax           | Tenant | No     | Tax calculations and withholdings by jurisdiction including federal, state, local, and FICA taxes with detailed breakdowns per employee                         |
+| PayrollCalendar      | Tenant | No     | Pay period definitions supporting weekly, bi-weekly, semi-monthly, and monthly cycles with holiday and processing date management                                |
+| PayrollBenefit       | Tenant | No     | Employee benefit configurations including health, dental, vision, retirement plans, and flexible spending accounts with enrollment and cost management          |
+| PayrollGarnishment   | Tenant | No     | Court-ordered garnishments including child support, wage garnishments, and tax levies with calculation rules and compliance tracking                             |
+| PayrollCheck         | Tenant | No     | Physical and electronic paycheck records with check numbers, payment amounts, and delivery method tracking                                                       |
+| PayrollDirectDeposit | Tenant | No     | Direct deposit configurations and processing records with bank account information, split allocations, and transaction confirmations                            |
+| PayrollHistoryEvent  | Tenant | No     | Comprehensive audit trail for payroll processing activities including run execution, corrections, and regulatory reporting                                       |
+
 
 ## time&attendance
 
@@ -748,64 +691,84 @@ Strategic purpose: Time tracking and attendance management with timesheet proces
 Notes:
 - Digital timesheet management with project and cost code allocation for accurate job costing.
 - GPS location tracking and geo-fencing for field employee time validation and compliance.
-- Automated overtime calculation with break compliance monitoring and approval workflows.
+- Automated overtime calculation with break compliance monitoring.
+- Timesheet approvals are handled via the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.), not a `TimesheetApproval` table.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Timesheet               | Tenant | Yes    | Employee timesheet container organizing daily and weekly time entries with project allocation and approval status tracking                                                |
-| TimesheetEntry          | Tenant | No     | Individual time entries with start/end times, project assignments, cost codes, and work description with duration calculations                                            |
-| TimesheetBreak          | Tenant | No     | Break period tracking for compliance with labor regulations including meal breaks, rest periods, and unpaid time classifications                                         |
-| TimesheetOvertime       | Tenant | No     | Overtime calculation records with rate differentials, regulatory compliance tracking, and approval requirements for premium time                                          |
-| TimesheetGeoLocation    | Tenant | No     | GPS location snapshots for time entry validation with coordinates, accuracy ratings, and geo-fence compliance verification                                               |
-| TimesheetSignature      | Tenant | No     | Digital signature records for employee and manager timesheet approvals with timestamp and authentication verification                                                     |
-| TimesheetApproval       | Tenant | No     | Multi-level approval workflows for timesheet validation with manager sign-offs, rejection reasons, and correction tracking                                               |
-| TimesheetAdjustment     | Tenant | No     | Manual timesheet corrections and adjustments with reason codes, authorization levels, and audit trail preservation                                                       |
-| TimesheetExport         | Tenant | No     | Export records for payroll and general ledger integration with batch processing status and reconciliation tracking                                                       |
-| TimesheetHistoryEvent   | Tenant | No     | Comprehensive audit trail for timesheet lifecycle including submissions, approvals, corrections, and system integrations                                                 |
+| Model                | Scope  | Parent | Description                                                                                                                                   |
+|----------------------|--------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| Timesheet            | Tenant | Yes    | Employee timesheet container organizing daily and weekly time entries with project allocation and approval status driven by the Approvals module |
+| TimesheetEntry       | Tenant | No     | Individual time entries with start/end times, project assignments, cost codes, and work description with duration calculations                |
+| TimesheetBreak       | Tenant | No     | Break period tracking for compliance with labor regulations including meal breaks, rest periods, and unpaid time classifications             |
+| TimesheetOvertime    | Tenant | No     | Overtime calculation records with rate differentials and regulatory compliance tracking, including flags for entries requiring approval      |
+| TimesheetGeoLocation | Tenant | No     | GPS location snapshots for time entry validation with coordinates, accuracy ratings, and geo-fence compliance verification                   |
+| TimesheetSignature   | Tenant | No     | Digital signature records for employee and manager timesheet approvals with timestamp and authentication verification                        |
+| TimesheetAdjustment  | Tenant | No     | Manual timesheet corrections and adjustments with reason codes, authorization levels, and audit trail preservation                           |
+| TimesheetExport      | Tenant | No     | Export records for payroll and general ledger integration with batch processing status and reconciliation tracking                           |
+| TimesheetHistoryEvent| Tenant | No     | Comprehensive audit trail for timesheet lifecycle including submissions, approvals, corrections, and system integrations                     |
+
 
 ## identityCore
 
-Strategic purpose: Foundational identity management system providing user authentication, tenant membership, session management, and API key administration with comprehensive security controls.
+Strategic purpose: Foundational global identity system providing single sign-on across tenants, session management, personal API keys, and global-level profile/state.
 
 Notes:
-- Multi-tenant user management with flexible tenant membership and role-based access patterns.
-- Secure session management with device tracking and API key provisioning for system integrations.
-- User preference management and invitation workflows for seamless onboarding experiences.
+- `User` is global and never carries `tenantId`; a single person can belong to many tenants via `Member` records in the membership directory.
+- All authentication flows (password, SSO, MFA) terminate at `User`; authorization is evaluated in **AccessControl** using `Member`/`ServiceAccount` and scopes.
+- `Tenant` lifecycle and configuration is owned by the **tenant** module; `identityCore` only references tenants indirectly via membership.
+- Platform-wide audit uses `Actor` to uniformly reference humans (`User`/`Member`) and non-humans (`ServiceAccount`).
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| IdentityUser            | Tenant | Yes    | Global user entity with authentication credentials, provider linkage, and multi-tenant membership capabilities                                                            |
-| IdentityUserProfile     | Tenant | No     | User profile information including personal details, avatar, contact information, and timezone preferences with privacy controls                                          |
-| IdentityTenant          | Tenant | Yes    | Tenant organization entity representing companies, departments, or isolated data boundaries with configuration and branding settings                                      |
-| IdentityUserTenant      | Tenant | No     | Many-to-many relationship managing user membership in tenants with default roles, invitation status, and activation tracking                                             |
-| IdentitySession         | Tenant | No     | Active user session management with device information, IP addresses, issuance timestamps, and expiration controls                                                       |
-| IdentityApiKey          | Tenant | Yes    | API key entities for server-to-server authentication with scoping, rate limiting, and usage monitoring capabilities                                                      |
-| IdentityApiKeyPermission| Tenant | No     | Permission assignments for API keys with granular action-level access control and resource scoping                                                                       |
-| IdentityUserSetting     | Tenant | No     | User preference configurations including language, notification settings, theme preferences, and accessibility options                                                    |
-| IdentityUserInvitation  | Tenant | No     | User invitation management with token generation, expiration tracking, and acceptance workflows for secure onboarding                                                    |
-| IdentityUserHistoryEvent| Tenant | No     | Comprehensive audit trail for identity events including password changes, device registrations, and security-related activities                                          |
+| Model           | Scope  | Parent | Description |
+|-----------------|--------|--------|-------------|
+| Actor           | Global | Yes    | Canonical "who did it" identity used across audit/event tables, referencing either a `User`, a `Member`, or a `ServiceAccount`. |
+| User            | Global | Yes    | Global authentication principal with login identifiers, credential state, verification flags, and base contact info. |
+| Session         | Global | Yes    | Web/mobile/API session for a `User` with token identifiers, device hints, geo/IP, and linkage to an optional current `Member` context. |
+| UserProfile     | Global | No     | Non-security global profile fields (display name, avatar, locale, time zone preferences) reused across tenants when tenant-specific overrides are absent. |
+| UserSetting     | Global | No     | Key/value store for cross-tenant user feature flags and preferences that are not tenant-specific. |
+| UserApiKey      | Global | Yes    | Personal access tokens linked to `User` and optionally pre-bound default `Member`/tenant contexts; further constrained by AccessControl scopes and roles. |
+| UserInvitation  | Global | No     | Global invitations sent via email/phone, tracking source tenant, intended role/type, and mapping to one or more `Member` records when accepted. |
+| UserHistoryEvent| Global | No     | Immutable history of major identity events: sign-ups, verification, merges, deactivation/reactivation, consent, and security-related changes. |
+
+## membershipDirectory
+
+Strategic purpose: Tenant-level membership and directory of all internal and external participants. Bridges global `User` identities to tenants, HR employees, CRM accounts/contacts, vendors, and portal participants.
+
+Notes:
+- `Member` is the canonical representation of "a person (or external actor) inside a tenant" and is always tenant-scoped.
+- Members can be INTERNAL (employees/staff), EXTERNAL_CLIENT (customers/owners), EXTERNAL_VENDOR (vendors/subcontractors), PARTNER, or GUEST.
+- Every interactive action in a tenant should resolve to a `Member` (or `ServiceAccount`) for audit, RBAC, and scoping.
+- HR and CRM modules link their person/company records back to `Member` to avoid duplicate login-centric entities.
+
+| Model               | Scope  | Parent | Description |
+|---------------------|--------|--------|-------------|
+| Member              | Tenant | Yes    | Tenant-level membership linking a global `User` to a `Tenant`, including type (INTERNAL, EXTERNAL_CLIENT, EXTERNAL_VENDOR, PARTNER, GUEST), status, and primary org/project associations. |
+| MemberSettings      | Tenant | No     | Per-tenant preferences for a `Member` (language, time zone, notification settings, default landing views) distinct from global `UserSetting`. |
+| MemberInvitation    | Tenant | No     | Tenant-specific invitations that create or attach to a `Member`, capturing inviter, intended member type, and initial role suggestions. |
+| MemberExternalLink  | Tenant | No     | Links a `Member` to domain entities such as `CRMAccount`, `CRMContact`, vendor/supplier records, or subcontractor companies to support external participant scenarios. |
+| MemberDocument      | Tenant | No     | Documents tied to membership (NDAs, portal terms acceptance, identity verification artifacts) distinct from HR employment documents. |
+| MemberHistoryEvent  | Tenant | No     | Audited membership lifecycle events (invited, joined, activated, role changes, disabled, removed) with `Actor` attribution. |
 
 ## identitySecurity
 
-Strategic purpose: Advanced security layer providing multi-factor authentication, SSO integration, device management, and comprehensive security monitoring with threat detection capabilities.
+Strategic purpose: Advanced security for global identity — MFA, SSO, device trust, recovery, and security events — layered on top of `identityCore` and reused across tenants.
 
 Notes:
-- Multi-factor authentication support including TOTP, SMS, email, and WebAuthn with recovery code management.
-- Enterprise SSO integration with OAuth providers and federated identity management capabilities.
-- Device tracking and security event monitoring with automated lockout and threat response mechanisms.
+- All security artifacts attach to the global `User` (and `Actor`) rather than directly to tenant membership.
+- Tenant-specific enforcement rules (e.g., required MFA level, allowed IdPs) are configured through AccessControl policies and membership configuration.
+- Supports passwordless, WebAuthn, TOTP, SMS/email MFA, and federated SSO (OIDC/SAML).
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| IdentityAuthProvider    | Tenant | Yes    | External authentication provider configurations supporting Google, Microsoft, Apple, Okta, Azure AD, and custom OAuth implementations                                    |
-| IdentityAuthFactor      | Tenant | No     | Multi-factor authentication method registry including TOTP, email OTP, SMS OTP, WebAuthn, and recovery code configurations                                              |
-| IdentityAuthFactorChallenge| Tenant | No   | Authentication challenge attempts with timestamps, success/failure status, and security validation results                                                                |
-| IdentityPasswordReset   | Tenant | No     | Password reset token management with secure token generation, expiration tracking, and usage validation                                                                   |
-| IdentityLockout         | Tenant | No     | Account lockout management for failed authentication attempts with progressive delays and administrative override capabilities                                             |
-| IdentitySecurityEvent   | Tenant | No     | Security event logging including login attempts, suspicious activities, MFA enrollment, password changes, and threat indicators                                          |
-| IdentitySSOSession      | Tenant | No     | Federated SSO session management with external provider integration and token refresh capabilities                                                                        |
-| IdentityRecoveryCode    | Tenant | No     | Multi-factor authentication recovery codes with secure generation, usage tracking, and regeneration workflows                                                            |
-| IdentityDevice          | Tenant | Yes    | Recognized device registry with browser fingerprinting, device identification, and trust level management                                                                 |
-| IdentityDeviceHistory   | Tenant | No     | Device usage history and security analytics with anomaly detection and access pattern analysis                                                                           |
+| Model                | Scope  | Parent | Description |
+|----------------------|--------|--------|-------------|
+| IdentityProvider     | Global | Yes    | Global catalog of supported identity providers (OIDC/SAML) including metadata, endpoints, certificates, and capabilities. |
+| TenantIdentityProvider| Tenant| No     | Tenant-specific SSO bindings linking a `Tenant` to one or more `IdentityProvider` entries with domain rules, provisioning modes, and enforcement flags. |
+| AuthFactor           | Global | Yes    | MFA factor registered for a `User` (TOTP, WebAuthn, SMS, email, push) with status, device binding, and last-used metadata. |
+| AuthFactorChallenge  | Global | No     | Individual MFA challenge attempt including factor used, context, result, risk score, and correlation IDs. |
+| PasswordResetToken   | Global | No     | Password/credential reset tokens with expiry, one-time use semantics, anti-phishing metadata, and linkage to the requesting `Actor`. |
+| AccountLockout       | Global | No     | Lockout state and counters for a `User` based on failed authentications, risk signals, or administrative action. |
+| SecurityEvent        | Global | No     | High-volume security event log capturing sign-ins, factor enrollments, device changes, anomalous activity, and admin actions. |
+| SSOSession           | Global | No     | Federated sign-in session with external identity providers, token state, and correlation with core `Session` records. |
+| RecoveryCode         | Global | No     | Offline MFA recovery codes for a `User`, stored hashed with usage tracking and regeneration history. |
+| UserDevice           | Global | Yes    | Known device fingerprints and trust state for a `User` with risk scores, last-seen metadata, and linkages to `SecurityEvent` records. |
+| UserDeviceHistory    | Global | No     | History of device usage and trust-level changes used for anomaly detection and investigations. |
 
 ## integrationsCore
 
@@ -925,28 +888,29 @@ Notes:
 - Flexible billing approaches including progress billing, milestone-based invoicing, and retainage management for construction projects.
 - Advanced payment application with partial payments, credits, debits, and adjustment tracking for complete financial reconciliation.
 - Automated collection workflows with reminder systems, public payment links, and comprehensive approval processes.
+- Invoice approvals (when required) are orchestrated through the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.), not invoice-specific approval tables.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Invoice                 | Tenant | Yes    | Master billing document with customer information, amounts, terms, status, and comprehensive payment tracking capabilities                                                |
-| InvoiceLineItem         | Tenant | No     | Individual billing line items for labor, materials, equipment, and subcontract work with quantity, rate, and extended amount calculations                               |
-| InvoiceTax              | Tenant | No     | Tax calculations applied to invoice with jurisdiction-specific rates, exemptions, and compliance reporting requirements                                                   |
-| InvoiceDiscount         | Tenant | No     | Discount applications including early payment discounts, volume discounts, and promotional reductions with approval tracking                                            |
-| InvoiceFee              | Tenant | No     | Additional charges and fees applied to invoices including late fees, processing charges, and administrative costs                                                        |
-| InvoiceRetainage        | Tenant | No     | Construction retainage management with percentage calculations, release schedules, and compliance with contractual retention requirements                                 |
-| InvoiceProgress         | Tenant | No     | Progress billing support with percentage completion calculations, earned value tracking, and milestone-based billing capabilities                                        |
-| InvoiceMilestone        | Tenant | No     | Milestone-based billing with predefined payment schedules, deliverable completion tracking, and automated invoice generation                                            |
-| InvoicePaymentApplication| Tenant | No    | Payment allocation records linking received payments to specific invoices with partial payment handling and cash application tracking                                    |
-| InvoiceAttachment       | Tenant | No     | Supporting documentation including timesheets, photos, receipts, labor records, and customer signatures with version control                                            |
-| InvoiceComment          | Tenant | No     | Internal comments and customer communication threads with timestamp tracking and collaboration capabilities                                                              |
-| InvoiceApproval         | Tenant | No     | Multi-level approval workflows with authorization limits, approval chains, and escalation procedures for billing accuracy                                               |
-| InvoiceRevision         | Tenant | No     | Invoice revision tracking with version history, change documentation, and audit trail preservation for billing transparency                                             |
-| InvoiceAdjustment       | Tenant | No     | Post-invoice adjustments including corrections, additions, and modifications with approval requirements and financial impact tracking                                   |
-| InvoiceCredit           | Tenant | No     | Credit memo management for refunds, rework, errors, and customer satisfaction adjustments with accounts receivable impact                                               |
-| InvoiceDebit            | Tenant | No     | Debit memo processing for additional charges, corrections, and supplemental billing with customer notification and approval workflows                                   |
-| InvoiceHistory          | Tenant | No     | Comprehensive activity timeline including creation, delivery, payment, disputes, and resolution with stakeholder attribution                                           |
-| InvoicePublicLink       | Tenant | No     | Secure public access URLs enabling customer invoice review, approval, and online payment without system access requirements                                             |
-| InvoiceReminder         | Tenant | No     | Automated collection and reminder system with escalating communication schedules, dunning processes, and customer relationship management                              |
+| Model                    | Scope  | Parent | Description                                                                                                                                 |
+|--------------------------|--------|--------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| Invoice                  | Tenant | Yes    | Master billing document with customer information, amounts, terms, status, and comprehensive payment tracking capabilities                 |
+| InvoiceLineItem          | Tenant | No     | Individual billing line items for labor, materials, equipment, and subcontract work with quantity, rate, and extended amount calculations |
+| InvoiceTax               | Tenant | No     | Tax calculations applied to invoice with jurisdiction-specific rates, exemptions, and compliance reporting requirements                    |
+| InvoiceDiscount          | Tenant | No     | Discount applications including early payment discounts, volume discounts, and promotional reductions, with optional approval routing via the Approvals module |
+| InvoiceFee               | Tenant | No     | Additional charges and fees applied to invoices including late fees, processing charges, and administrative costs                          |
+| InvoiceRetainage         | Tenant | No     | Construction retainage management with percentage calculations, release schedules, and compliance with contractual retention requirements  |
+| InvoiceProgress          | Tenant | No     | Progress billing support with percentage completion calculations, earned value tracking, and milestone-based billing capabilities          |
+| InvoiceMilestone         | Tenant | No     | Milestone-based billing with predefined payment schedules, deliverable completion tracking, and automated invoice generation              |
+| InvoicePaymentApplication| Tenant | No     | Payment allocation records linking received payments to specific invoices with partial payment handling and cash application tracking      |
+| InvoiceAttachment        | Tenant | No     | Supporting documentation including timesheets, photos, receipts, labor records, and customer signatures with version control              |
+| InvoiceComment           | Tenant | No     | Internal comments and customer communication threads with timestamp tracking and collaboration capabilities                               |
+| InvoiceRevision          | Tenant | No     | Invoice revision tracking with version history, change documentation, and audit trail preservation for billing transparency               |
+| InvoiceAdjustment        | Tenant | No     | Post-invoice adjustments including corrections, additions, and modifications, with optional approval requirements via the Approvals module and financial impact tracking |
+| InvoiceCredit            | Tenant | No     | Credit memo management for refunds, rework, errors, and customer satisfaction adjustments with accounts receivable impact                 |
+| InvoiceDebit             | Tenant | No     | Debit memo processing for additional charges, corrections, and supplemental billing with customer notification and optional approval workflows via the Approvals module |
+| InvoiceHistory           | Tenant | No     | Comprehensive activity timeline including creation, delivery, payment, disputes, and resolution with stakeholder attribution              |
+| InvoicePublicLink        | Tenant | No     | Secure public access URLs enabling customer invoice review, approval, and online payment without system access requirements               |
+| InvoiceReminder          | Tenant | No     | Automated collection and reminder system with escalating communication schedules, dunning processes, and customer relationship management |
+
 
 ## jobCosting
 
@@ -956,45 +920,20 @@ Notes:
 - CSI MasterFormat compatible cost coding system supporting standardized construction and service industry cost classifications.
 - Real-time cost capture and allocation across labor, materials, equipment, and subcontract categories with budget variance analysis.
 - Comprehensive forecasting capabilities with cost-to-complete projections and profitability optimization recommendations.
+- Budget and major cost changes can be gated by the central **Approvals** module when required (no job-cost-specific approval tables).
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| CostCode                | Tenant | Yes    | Standardized cost code hierarchy supporting CSI MasterFormat classifications with custom extensions for industry-specific requirements                                   |
-| CostCategory            | Tenant | No     | High-level cost categorization including labor, materials, equipment, subcontract, and overhead with reporting and analysis groupings                                   |
-| CostType                | Tenant | No     | Cost classification types distinguishing between budgeted, committed, actual, and forecasted costs for comprehensive financial analysis                                  |
-| CostCenter              | Tenant | No     | Organizational cost allocation points including departments, divisions, and profit centers for cross-project cost distribution                                           |
-| JobCostLedger           | Tenant | Yes    | Master cost ledger containing all project-related financial transactions with real-time cost accumulation and reporting capabilities                                    |
-| JobCostLine             | Tenant | No     | Individual cost transaction records with detailed allocation information including quantities, rates, extended amounts, and cost code assignments                       |
-| JobCostBudget           | Tenant | Yes    | Project budget container with original budget, approved changes, and current budget tracking for comprehensive financial planning                                       |
-| JobCostBudgetLine       | Tenant | No     | Budget line items by cost code with quantity and amount budgets, variance tracking, and approval workflow integration                                                   |
-| JobCostForecast         | Tenant | No     | Cost-to-complete forecasting with projected final costs, variance analysis, and profitability projections for proactive project management                             |
-| JobCostHistoryEvent     | Tenant | No     | Comprehensive audit trail for cost transactions, budget modifications, and forecast updates with user attribution and change documentation                             |
-
-## lead
-
-Strategic purpose: Lead capture and qualification system providing comprehensive lead scoring, nurturing workflows, interaction tracking, and conversion management for sales pipeline optimization.
-
-Notes:
-- Multi-channel lead capture with automated routing, scoring algorithms, and qualification frameworks for efficient sales processes.
-- Comprehensive interaction tracking including emails, calls, meetings, and digital engagement with timeline and activity analysis.
-- Conversion tracking from lead through opportunity to quote with complete attribution and performance analytics.
-
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Lead                    | Tenant | Yes    | Master lead record capturing prospect information, source attribution, qualification status, and comprehensive pipeline tracking capabilities                             |
-| LeadContact             | Tenant | No     | Contact information associated with leads including multiple contact methods, preferences, and communication history with relationship mapping                           |
-| LeadStatusHistory       | Tenant | No     | Lead status progression tracking through qualification stages from new leads to converted opportunities with timeline analysis                                           |
-| LeadInteraction         | Tenant | No     | Comprehensive interaction logging including emails, phone calls, meetings, and digital touchpoints with outcome and follow-up tracking                                  |
-| LeadNote                | Tenant | No     | Internal lead notes and observations with collaboration features, tagging, and search capabilities for team coordination                                                 |
-| LeadAttachment          | Tenant | No     | Lead-related document management including proposals, specifications, presentations, and reference materials with version control                                        |
-| LeadScore               | Tenant | No     | Dynamic lead scoring with behavioral and demographic factors, scoring algorithms, and threshold-based qualification triggers                                             |
-| LeadScoreHistory        | Tenant | No     | Lead score evolution tracking with factor attribution, score change documentation, and trending analysis for optimization                                                |
-| LeadAssignment          | Tenant | No     | Lead assignment management with sales representative allocation, territory rules, and workload balancing capabilities                                                    |
-| LeadFollowUp            | Tenant | No     | Scheduled follow-up activities including callbacks, emails, tasks, and meeting scheduling with automated reminder and escalation systems                                |
-| LeadQualification       | Tenant | No     | Structured qualification assessment using frameworks like BANT with scoring, criteria tracking, and decision support                                                    |
-| LeadActivity            | Tenant | No     | General activity logging for lead engagement with categorization, outcome tracking, and performance measurement capabilities                                             |
-| LeadRoutingLog          | Tenant | No     | Automated routing decision tracking with rule attribution, assignment rationale, and routing optimization analytics                                                     |
-| LeadConversion          | Tenant | No     | Lead-to-opportunity conversion tracking with attribution, timeline analysis, and conversion rate optimization for sales performance improvement                          |
+| Model               | Scope  | Parent | Description                                                                                                                                      |
+|---------------------|--------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| CostCode            | Tenant | Yes    | Standardized cost code hierarchy supporting CSI MasterFormat classifications with custom extensions for industry-specific requirements          |
+| CostCategory        | Tenant | No     | High-level cost categorization including labor, materials, equipment, subcontract, and overhead with reporting and analysis groupings           |
+| CostType            | Tenant | No     | Cost classification types distinguishing between budgeted, committed, actual, and forecasted costs for comprehensive financial analysis         |
+| CostCenter          | Tenant | No     | Organizational cost allocation points including departments, divisions, and profit centers for cross-project cost distribution                  |
+| JobCostLedger       | Tenant | Yes    | Master cost ledger containing all project-related financial transactions with real-time cost accumulation and reporting capabilities            |
+| JobCostLine         | Tenant | No     | Individual cost transaction records with detailed allocation information including quantities, rates, extended amounts, and cost code assignments |
+| JobCostBudget       | Tenant | Yes    | Project budget container with original budget, approved changes, and current budget tracking for comprehensive financial planning               |
+| JobCostBudgetLine   | Tenant | No     | Budget line items by cost code with quantity and amount budgets, variance tracking, and optional approval routing via the central Approvals module |
+| JobCostForecast     | Tenant | No     | Cost-to-complete forecasting with projected final costs, variance analysis, and profitability projections for proactive project management      |
+| JobCostHistoryEvent | Tenant | No     | Comprehensive audit trail for cost transactions, budget modifications, and forecast updates with user attribution and change documentation      |
 
 ## maintenancePlans&RecurringServiceContracts
 
@@ -1004,19 +943,20 @@ Notes:
 - Flexible service contract templates supporting monthly, seasonal, and custom recurring schedules with automated task generation.
 - Integrated payment processing with stored payment methods, automatic renewal management, and subscription billing capabilities.
 - Customer retention tools including cancellation management, renewal optimization, and service quality tracking.
+- Any required approvals (e.g., high-value contracts, price changes, cancellations with financial impact) are handled through the central **Approvals** module.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ServiceContract         | Tenant | Yes    | Master service contract entity with customer agreements, terms, pricing, and recurring service schedule management                                                        |
-| ServiceContractPlan     | Tenant | No     | Service contract templates defining standard offerings including monthly, bi-annual, and seasonal maintenance plans with pricing and task definitions                    |
-| ServiceContractSchedule | Tenant | No     | Recurring service scheduling with frequency rules, next service dates, and automated appointment generation for proactive maintenance delivery                           |
-| ServiceContractTask     | Tenant | No     | Predefined maintenance tasks for each service visit including inspections, cleaning, replacements, and testing with completion tracking                                  |
-| ServiceContractPricing  | Tenant | No     | Contract pricing structures with tiered pricing, discounts, promotional rates, and escalation schedules for revenue optimization                                         |
-| ServiceContractPaymentMethod| Tenant | No   | Stored payment methods including credit cards and ACH accounts with tokenization, expiration tracking, and payment processing integration                               |
-| ServiceContractRenewal  | Tenant | No     | Contract renewal management with automatic renewal settings, notification schedules, and customer approval workflows                                                     |
-| ServiceContractCancelation| Tenant | No   | Contract cancellation processing with reason tracking, retention offers, and financial settlement procedures                                                             |
-| ServiceContractNotification| Tenant | No   | Automated customer communication including service reminders, renewal notices, and payment notifications via email and SMS                                             |
-| ServiceContractHistoryEvent| Tenant | No  | Comprehensive contract lifecycle tracking including creation, modifications, renewals, cancellations, and service delivery history                                      |
+| Model                       | Scope  | Parent | Description                                                                                                                                         |
+|----------------------------|--------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| ServiceContract            | Tenant | Yes    | Master service contract entity with customer agreements, terms, pricing, and recurring service schedule management                                 |
+| ServiceContractPlan        | Tenant | No     | Service contract templates defining standard offerings including monthly, bi-annual, and seasonal maintenance plans with pricing and task definitions |
+| ServiceContractSchedule    | Tenant | No     | Recurring service scheduling with frequency rules, next service dates, and automated appointment generation for proactive maintenance delivery     |
+| ServiceContractTask        | Tenant | No     | Predefined maintenance tasks for each service visit including inspections, cleaning, replacements, and testing with completion tracking             |
+| ServiceContractPricing     | Tenant | No     | Contract pricing structures with tiered pricing, discounts, promotional rates, and escalation schedules for revenue optimization                    |
+| ServiceContractPaymentMethod| Tenant | No    | Stored payment methods including credit cards and ACH accounts with tokenization, expiration tracking, and payment processing integration           |
+| ServiceContractRenewal     | Tenant | No     | Contract renewal management with automatic renewal settings, notification schedules, and optional approval workflows orchestrated via the Approvals module |
+| ServiceContractCancelation | Tenant | No     | Contract cancellation processing with reason tracking, retention offers, and financial settlement procedures                                        |
+| ServiceContractNotification| Tenant | No     | Automated customer communication including service reminders, renewal notices, and payment notifications via email and SMS                          |
+| ServiceContractHistoryEvent| Tenant | No     | Comprehensive contract lifecycle tracking including creation, modifications, renewals, cancellations, and service delivery history                  |
 
 ## notifications
 
@@ -1039,28 +979,6 @@ Notes:
 | NotificationQueueItem   | Tenant | No     | Notification delivery queue management with priority handling, batch processing, and retry scheduling for reliable message delivery                                      |
 | NotificationAttachment  | Tenant | No     | Notification file attachments including images, PDFs, and reports with secure delivery and access control                                                               |
 | NotificationHistoryEvent| Tenant | No    | Comprehensive notification lifecycle tracking including creation, delivery attempts, user interactions, and system performance analytics                                 |
-
-## opportunity
-
-Strategic purpose: Sales opportunity management system providing pipeline tracking, forecasting capabilities, team collaboration, and comprehensive opportunity lifecycle management for revenue optimization.
-
-Notes:
-- Complete sales pipeline management with stage progression, probability weighting, and forecasting integration for revenue prediction.
-- Team collaboration features with multi-stakeholder involvement, competitor tracking, and comprehensive communication history.
-- Conversion tracking and loss analysis with detailed attribution and performance optimization recommendations.
-
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Opportunity             | Tenant | Yes    | Sales opportunity entity with deal information, pipeline stage, value estimation, probability assessment, and comprehensive tracking capabilities                         |
-| OpportunityStage        | Tenant | No     | Pipeline stage definitions including qualification, estimation, negotiation, and closure stages with probability weighting and progression rules                         |
-| OpportunityContact      | Tenant | No     | Stakeholder contact management with decision-maker identification, influence mapping, and communication preference tracking                                               |
-| OpportunityLineItem     | Tenant | No     | Opportunity line items representing potential products or services with pricing, quantities, and configuration details for accurate valuation                           |
-| OpportunityTeamMember   | Tenant | No     | Sales team assignment with role definitions, responsibility allocation, and collaboration tracking for multi-stakeholder opportunity management                          |
-| OpportunityCompetitor   | Tenant | No     | Competitive intelligence tracking with competitor identification, strengths/weaknesses analysis, and competitive positioning strategies                                   |
-| OpportunityForecast     | Tenant | No     | Revenue forecasting records with time-based projections, probability adjustments, and pipeline contribution analysis for sales planning                                  |
-| OpportunityLossReason   | Tenant | No     | Lost opportunity analysis with reason categorization, competitor attribution, and improvement opportunity identification for sales process optimization                   |
-| OpportunityAttachment   | Tenant | No     | Opportunity documentation including proposals, specifications, drawings, presentations, and reference materials with version control                                     |
-| OpportunityHistoryEvent | Tenant | No     | Comprehensive opportunity timeline tracking including stage progressions, stakeholder interactions, and decision milestones with attribution and analytics              |
 
 ## payments_AR_Cash_Application
 
@@ -1089,22 +1007,23 @@ Notes:
 Strategic purpose: Complete procurement lifecycle management from requisition through purchase order execution, receipt verification, and vendor payment integration with comprehensive approval workflows.
 
 Notes:
-- End-to-end procurement process supporting requisitions, purchase orders, receipts, and returns with multi-level approval workflows.
+- End-to-end procurement process supporting requisitions, purchase orders, receipts, and returns.
+- Multi-level approvals for requisitions and POs are orchestrated via the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.), not mediante tablas específicas de procurement.
 - Vendor management integration with purchase order tracking, delivery confirmation, and cost impact analysis for project budgeting.
 - Comprehensive receipt verification with quantity matching, quality control, and automated invoice processing integration.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| PurchaseOrder           | Tenant | Yes    | Master purchase order entity with vendor information, terms, delivery requirements, and comprehensive status tracking capabilities                                        |
-| PurchaseOrderLineItem   | Tenant | No     | Purchase order line items with materials, equipment, services, and subcontract details including quantities, pricing, and delivery specifications                        |
-| PurchaseRequisition     | Tenant | Yes    | Internal purchase requisition for materials and services with approval routing and budget verification before purchase order creation                                     |
-| PurchaseRequisitionItem | Tenant | No     | Requisition line items with detailed specifications, quantities, preferred vendors, and budget allocation information                                                     |
-| PurchaseOrderApproval   | Tenant | No     | Multi-level approval workflow with manager, project manager, accounting approvals and authorization limit enforcement                                                     |
-| PurchaseOrderReceipt    | Tenant | Yes    | Goods received documentation with delivery verification, quantity confirmation, and quality inspection results                                                            |
-| PurchaseOrderReceiptItem| Tenant | No     | Receipt line items with received quantities, condition assessment, variance analysis, and acceptance or rejection decisions                                               |
-| PurchaseOrderReturn     | Tenant | No     | Return merchandise authorization with return reasons, vendor coordination, and credit or replacement tracking                                                             |
-| PurchaseOrderAttachment | Tenant | No     | Purchase order documentation including vendor invoices, packing slips, delivery receipts, photos, and specification documents                                            |
-| PurchaseOrderHistoryEvent| Tenant | No    | Comprehensive audit trail for purchase order lifecycle including creation, approval, transmission, receipt, invoicing, and payment activities                           |
+| Model                    | Scope  | Parent | Description                                                                                                                                         |
+|--------------------------|--------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| PurchaseOrder            | Tenant | Yes    | Master purchase order entity with vendor information, terms, delivery requirements, and comprehensive status tracking capabilities                  |
+| PurchaseOrderLineItem    | Tenant | No     | Purchase order line items with materials, equipment, services, and subcontract details including quantities, pricing, and delivery specifications  |
+| PurchaseRequisition      | Tenant | Yes    | Internal purchase requisition for materials and services with budgeting context and linkage to approval workflows managed by the central Approvals module |
+| PurchaseRequisitionItem  | Tenant | No     | Requisition line items with detailed specifications, quantities, preferred vendors, and budget allocation information                               |
+| PurchaseOrderReceipt     | Tenant | Yes    | Goods received documentation with delivery verification, quantity confirmation, and quality inspection results                                      |
+| PurchaseOrderReceiptItem | Tenant | No     | Receipt line items with received quantities, condition assessment, variance analysis, and acceptance or rejection decisions                         |
+| PurchaseOrderReturn      | Tenant | No     | Return merchandise authorization with return reasons, vendor coordination, and credit or replacement tracking                                       |
+| PurchaseOrderAttachment  | Tenant | No     | Purchase order documentation including vendor invoices, packing slips, delivery receipts, photos, and specification documents                      |
+| PurchaseOrderHistoryEvent| Tenant | No     | Comprehensive audit trail for purchase order lifecycle including creation, approval routing via Approvals, transmission, receipt, invoicing, and payment activities |
+
 
 ## projectsCore
 
@@ -1114,19 +1033,22 @@ Notes:
 - Hierarchical project organization with phases, milestones, and location-based work breakdown for comprehensive project structure.
 - Integrated team management with role-based assignments, responsibility tracking, and collaboration capabilities.
 - Master budget control with line-item detail, change management, and real-time cost tracking integration.
+- Any required approvals (e.g., project creation, major budget changes, milestone sign-offs) are handled via the central **Approvals** module.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Project                 | Tenant | Yes    | Master project entity with scope definition, financial tracking, stakeholder information, and comprehensive lifecycle management capabilities                             |
-| ProjectPhase            | Tenant | No     | High-level project phases including pre-construction, execution, finishing, and closeout with milestone integration and progress tracking                                |
-| ProjectMilestone        | Tenant | No     | Critical project deliverables and checkpoints with date tracking, completion criteria, and stakeholder approval requirements                                             |
-| ProjectTeamMember       | Tenant | No     | Project team assignments including project managers, superintendents, estimators, engineers, and field personnel with role-based access control                        |
-| ProjectLocation         | Tenant | No     | Geographic and spatial project organization including buildings, floors, zones, and units with hierarchical location management                                          |
-| ProjectBudget           | Tenant | Yes    | Master project budget container with original budget, approved changes, and current budget tracking for comprehensive financial control                                  |
-| ProjectBudgetLineItem   | Tenant | No     | Detailed budget line items by cost category with quantity and cost tracking, variance analysis, and change order integration                                             |
-| ProjectDocument         | Tenant | No     | Project-level document management including contracts, specifications, permits, and regulatory documentation with version control                                        |
-| ProjectAttachment       | Tenant | No     | Project file management including drawings, photos, reports, and reference materials with categorization and access control                                               |
-| ProjectHistoryEvent     | Tenant | No     | Comprehensive project audit trail capturing all project-level changes, decisions, and milestone achievements with stakeholder attribution                               |
+| Model                 | Scope  | Parent | Description                                                                                                                                 |
+|-----------------------|--------|--------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| Project               | Tenant | Yes    | Master project entity with scope definition, financial tracking, stakeholder information, and comprehensive lifecycle management capabilities |
+| ProjectPhase          | Tenant | No     | High-level project phases including pre-construction, execution, finishing, and closeout with milestone integration and progress tracking   |
+| ProjectMilestone      | Tenant | No     | Critical project deliverables and checkpoints with date tracking, completion criteria, and optional approval routing via the Approvals module |
+| ProjectTeamMember     | Tenant | No     | Project team assignments including project managers, superintendents, estimators, engineers, and field personnel with role-based access control |
+| ProjectLocation       | Tenant | No     | Geographic and spatial project organization including buildings, floors, zones, and units with hierarchical location management            |
+| ProjectBudget         | Tenant | Yes    | Master project budget container with original budget, approved changes, and current budget tracking for comprehensive financial control    |
+| ProjectBudgetLineItem | Tenant | No     | Detailed budget line items by cost category with quantity and cost tracking, variance analysis, and change order integration               |
+| ProjectDocument       | Tenant | No     | Project-level document management including contracts, specifications, permits, and regulatory documentation with version control          |
+| ProjectAttachment     | Tenant | No     | Project file management including drawings, photos, reports, and reference materials with categorization and access control               |
+| ProjectHistoryEvent   | Tenant | No     | Comprehensive project audit trail capturing all project-level changes, decisions, and milestone achievements with stakeholder attribution |
+
+
 
 ## projectTask&Scheduling
 
@@ -1158,19 +1080,20 @@ Notes:
 - Proactive risk management with impact assessment, mitigation planning, and continuous monitoring for project success.
 - Comprehensive daily logging with labor, equipment, and material tracking for accurate project documentation and cost control.
 - Decision tracking and issue management with resolution workflows and stakeholder accountability for project governance.
+- When a risk, issue, or decision requires formal approval (e.g., high-impact mitigation plans), routing is handled via the central **Approvals** module (ApprovalRequest, ApprovalDecision, etc.), not via module-specific approval tables.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ProjectRisk             | Tenant | No     | Risk identification and assessment with impact analysis, probability ratings, mitigation strategies, and continuous monitoring capabilities                               |
-| ProjectIssue            | Tenant | No     | Issue tracking and resolution management with priority assignment, owner responsibility, and escalation procedures for project obstacle removal                          |
-| ProjectDecision         | Tenant | No     | Formal decision documentation including RFI responses, change approvals, and management decisions with authority attribution and impact analysis                         |
-| ProjectDailyLog         | Tenant | Yes    | Daily project activity logging with weather conditions, work performed, issues encountered, and progress documentation                                                    |
-| ProjectDailyLogLabor    | Tenant | No     | Daily labor tracking with crew assignments, hours worked, productivity metrics, and cost code allocation for accurate job costing                                       |
-| ProjectDailyLogEquipment| Tenant | No     | Daily equipment usage logging with equipment identification, hours operated, maintenance needs, and cost allocation tracking                                             |
-| ProjectDailyLogMaterial | Tenant | No     | Daily material tracking with deliveries received, quantities used, waste documentation, and inventory impact for material management                                     |
-| ProjectDailyLogPhoto    | Tenant | No     | Daily photo documentation with progress photos, issue documentation, safety observations, and quality verification images                                                |
-| ProjectProgress         | Tenant | No     | Project progress tracking with percentage completion updates, milestone achievement, and schedule performance measurement                                                  |
-| ProjectNote             | Tenant | No     | General project notes and observations with categorization, stakeholder communication, and historical reference capabilities                                             |
+| Model                    | Scope  | Parent | Description                                                                                                                                  |
+|--------------------------|--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| ProjectRisk              | Tenant | No     | Risk identification and assessment with impact analysis, probability ratings, mitigation strategies, and continuous monitoring capabilities |
+| ProjectIssue             | Tenant | No     | Issue tracking and resolution management with priority assignment, owner responsibility, and escalation procedures for project obstacle removal |
+| ProjectDecision          | Tenant | No     | Formal decision documentation including RFI responses, change approvals, and management decisions with authority attribution and impact analysis |
+| ProjectDailyLog          | Tenant | Yes    | Daily project activity logging with weather conditions, work performed, issues encountered, and progress documentation                      |
+| ProjectDailyLogLabor     | Tenant | No     | Daily labor tracking with crew assignments, hours worked, productivity metrics, and cost code allocation for accurate job costing           |
+| ProjectDailyLogEquipment | Tenant | No     | Daily equipment usage logging with equipment identification, hours operated, maintenance needs, and cost allocation tracking                |
+| ProjectDailyLogMaterial  | Tenant | No     | Daily material tracking with deliveries received, quantities used, waste documentation, and inventory impact for material management       |
+| ProjectDailyLogPhoto     | Tenant | No     | Daily photo documentation with progress photos, issue documentation, safety observations, and quality verification images                   |
+| ProjectProgress          | Tenant | No     | Project progress tracking with percentage completion updates, milestone achievement, and schedule performance measurement                   |
+| ProjectNote              | Tenant | No     | General project notes and observations with categorization, stakeholder communication, and historical reference capabilities                |
 
 ## quality
 
@@ -1194,33 +1117,6 @@ Notes:
 | QualityAttachment       | Tenant | No     | Quality-related documentation including inspection photos, test reports, certificates, and reference drawings with categorization and access control                     |
 | QualityInspectionHistory| Tenant | No     | Comprehensive audit trail for quality activities including inspection results, decision changes, and corrective action completion with stakeholder attribution          |
 
-## quote
-
-Strategic purpose: Sales quotation system providing comprehensive pricing proposals, revision management, customer approval workflows, and conversion tracking for revenue generation.
-
-Notes:
-- Professional quotation generation with sectioned pricing, tax calculations, discount management, and terms integration for customer presentations.
-- Revision control with version management, change tracking, and approval workflows for accurate pricing and scope management.
-- Customer engagement features including digital signatures, public links, acceptance tracking, and conversion to project workflows.
-
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Quote                   | Tenant | Yes    | Master sales quotation with customer information, pricing summary, terms, and comprehensive lifecycle tracking capabilities                                               |
-| QuoteRevision           | Tenant | No     | Quote version management with change tracking, approval workflows, and historical preservation for pricing accuracy and audit trails                                     |
-| QuoteSection            | Tenant | No     | Structured quote organization by labor categories, material types, equipment, and services with hierarchical pricing presentation                                        |
-| QuoteLineItem           | Tenant | No     | Individual quote line items with detailed pricing, quantities, markup calculations, and extended amount computations                                                     |
-| QuoteTax                | Tenant | No     | Tax calculations applied to quotes with jurisdiction-specific rates, exemption handling, and compliance integration                                                      |
-| QuoteDiscount           | Tenant | No     | Discount management with percentage and fixed amount discounts at quote and section levels with approval tracking and authorization limits                              |
-| QuoteTerm               | Tenant | No     | Customer-facing terms and conditions including payment terms, warranties, scope limitations, and legal provisions                                                       |
-| QuoteAttachment         | Tenant | No     | Quote supporting documentation including photos, drawings, specifications, and reference materials with customer access control                                          |
-| QuoteComment            | Tenant | No     | Quote discussion management with internal notes and customer communication threads for collaboration and decision tracking                                               |
-| QuoteApproval           | Tenant | No     | Internal quote approval workflows with authorization limits, approval chains, and management sign-off requirements before customer delivery                             |
-| QuoteTemplate           | Tenant | No     | Quote template management for standardized proposals with predefined sections, pricing structures, and terms for efficiency and consistency                            |
-| QuoteSignature          | Tenant | No     | Digital signature management with customer authentication, signature validation, and legal compliance for binding agreements                                             |
-| QuoteAcceptance         | Tenant | No     | Customer quote acceptance tracking with timestamp, signer identification, IP address, and conversion initiation for project creation                                    |
-| QuoteRejection          | Tenant | No     | Quote rejection management with reason tracking, feedback collection, and follow-up opportunity identification for sales improvement                                     |
-| QuotePublicLink         | Tenant | No     | Secure public access URLs for customer quote review, approval, and signature without system access requirements                                                         |
-| QuoteHistoryEvent       | Tenant | No     | Comprehensive quote lifecycle audit trail including creation, revisions, delivery, customer interactions, and conversion activities with stakeholder attribution       |
 
 ## RFIs_Request_for_information
 
@@ -1310,6 +1206,7 @@ Notes:
 | SafetyWeatherRisk       | Tenant | No     | Weather-related safety risk management with automated alerts for high winds, extreme temperatures, precipitation with activity restrictions and protocols              |
 | SafetyIncidentHistoryEvent| Tenant | No   | Comprehensive incident lifecycle tracking including reporting, investigation, corrective actions, and closure with complete audit trail and regulatory compliance      |
 
+
 ## schedulingCore
 
 Strategic purpose: Global scheduling engine providing comprehensive calendar management, resource allocation, availability tracking, and assignment coordination for enterprise-wide scheduling optimization.
@@ -1318,19 +1215,20 @@ Notes:
 - Universal scheduling framework supporting projects, employees, equipment, and resources with comprehensive availability and exception management.
 - Multi-resource assignment capabilities with shift management, time-off tracking, and overtime coordination for optimal resource utilization.
 - Integration-ready architecture supporting project tasks, work orders, appointments, and milestones with unified scheduling workflows.
+- Formal approvals for certain schedule changes (e.g., overtime-heavy shifts or sensitive time-off) can be orchestrated via the central **Approvals** module.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Schedule                | Tenant | Yes    | Master scheduling container supporting projects, employees, and equipment with comprehensive calendar management and resource coordination                                |
-| ScheduleItem            | Tenant | No     | Individual scheduled events including tasks, work orders, appointments, and milestones with duration, priority, and resource requirements                               |
-| ScheduleAssignment      | Tenant | No     | Resource assignment management linking personnel, crews, and equipment to scheduled items with role definitions and responsibility tracking                             |
-| ScheduleAvailability    | Tenant | No     | Resource availability management for employees, crews, and equipment with capacity tracking and utilization optimization                                                |
-| ScheduleTimeOff         | Tenant | No     | Time-off management including vacations, sick leave, and personal time with approval workflows and coverage coordination                                                |
-| ScheduleException       | Tenant | No     | Schedule exception handling for holidays, job site closures, weather risks, and emergency situations with automatic rescheduling capabilities                         |
-| ScheduleShift           | Tenant | No     | Work shift definitions including morning, full-day, and night shifts with overtime rules and break scheduling integration                                               |
-| ScheduleResource        | Tenant | No     | Schedulable resource registry including personnel, crews, equipment, and subcontractors with capability definitions and availability tracking                          |
-| ScheduleNote            | Tenant | No     | Schedule annotation system with event-specific notes, instructions, and communication for enhanced coordination and information sharing                                  |
-| ScheduleHistoryEvent    | Tenant | No     | Comprehensive scheduling audit trail capturing all schedule changes, assignments, cancellations, and optimizations with stakeholder attribution                       |
+| Model                | Scope  | Parent | Description                                                                                                                                   |
+|----------------------|--------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| Schedule             | Tenant | Yes    | Master scheduling container supporting projects, employees, and equipment with comprehensive calendar management and resource coordination    |
+| ScheduleItem         | Tenant | No     | Individual scheduled events including tasks, work orders, appointments, and milestones with duration, priority, and resource requirements     |
+| ScheduleAssignment   | Tenant | No     | Resource assignment management linking personnel, crews, and equipment to scheduled items with role definitions and responsibility tracking  |
+| ScheduleAvailability | Tenant | No     | Resource availability management for employees, crews, and equipment with capacity tracking and utilization optimization                     |
+| ScheduleTimeOff      | Tenant | No     | Time-off management including vacations, sick leave, and personal time; may link to approval workflows driven by the Approvals module where required |
+| ScheduleException    | Tenant | No     | Schedule exception handling for holidays, job site closures, weather risks, and emergency situations with automatic rescheduling capabilities |
+| ScheduleShift        | Tenant | No     | Work shift definitions including morning, full-day, and night shifts with overtime rules and break scheduling integration                    |
+| ScheduleResource     | Tenant | No     | Schedulable resource registry including personnel, crews, equipment, and subcontractors with capability definitions and availability tracking |
+| ScheduleNote         | Tenant | No     | Schedule annotation system with event-specific notes, instructions, and communication for enhanced coordination and information sharing       |
+| ScheduleHistoryEvent | Tenant | No     | Comprehensive scheduling audit trail capturing all schedule changes, assignments, cancellations, and optimizations with stakeholder attribution |
 
 ## schedulingOptimization&Constrains
 
@@ -1356,25 +1254,26 @@ Notes:
 
 ## submittals
 
-Strategic purpose: Submittal management system providing comprehensive approval workflows for materials, products, shop drawings, and design documentation with specification compliance tracking.
+Strategic purpose: Submittal management system providing review workflows for materials, products, shop drawings, and design documentation with specification compliance tracking.
 
 Notes:
-- Complete submittal lifecycle management from submission through approval with multi-stakeholder review processes and revision tracking.
+- Complete submittal lifecycle management from submission through review and final disposition with multi-stakeholder processes and revision tracking.
 - Specification section integration with CSI MasterFormat compatibility for standardized construction document management and compliance verification.
-- Automated workflow management with reviewer assignments, distribution lists, and approval sequences for efficient project communication.
+- Automated workflow management with reviewer assignments, distribution lists, and review sequences for efficient project communication.
+- When a submittal’s disposition must go through formal company approval (e.g., high-risk or high-value items), this can be mirrored in the central **Approvals** module instead of using a dedicated `SubmittalApproval` table.
 
-| Model                   | Scope  | Parent |                                                Description                                                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Submittal               | Tenant | Yes    | Master submittal entity for materials, shop drawings, samples, and product data requiring review and approval with comprehensive tracking capabilities                   |
-| SubmittalItem           | Tenant | No     | Individual submittal components with detailed specifications, quantities, and approval requirements for granular tracking and management                                 |
-| SubmittalReview         | Tenant | No     | Review and approval tracking with architect and engineer decisions including approved, revise, and rejected status with detailed feedback                               |
-| SubmittalAttachment     | Tenant | No     | Supporting documentation including drawings, photos, safety data sheets, and product data with version control and access management                                     |
-| SubmittalStatus         | Tenant | No     | Status management with standardized workflow stages including draft, submitted, under review, approved, and rejected classifications                                     |
-| SubmittalSpecSection    | Tenant | No     | Specification section linkage with CSI MasterFormat integration for standardized construction specification compliance and reference                                     |
-| SubmittalReviewer       | Tenant | No     | Reviewer assignment management with role-based responsibilities, expertise areas, and approval authority for appropriate stakeholder coordination                       |
-| SubmittalWorkflowStep   | Tenant | No     | Approval sequence management with step-by-step workflow progression from general contractor through architect and engineer reviews                                      |
-| SubmittalDistribution   | Tenant | No     | Distribution list management for stakeholder notification, document sharing, and communication coordination throughout the approval process                             |
-| SubmittalHistoryEvent   | Tenant | No     | Complete submittal lifecycle audit trail including submission, reviews, approvals, rejections, and revisions with comprehensive stakeholder attribution               |
+| Model                 | Scope  | Parent | Description                                                                                                  |
+|-----------------------|--------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Submittal             | Tenant | Yes    | Master submittal entity for materials, shop drawings, samples, and product data requiring review with comprehensive tracking capabilities              |
+| SubmittalItem         | Tenant | No     | Individual submittal components with detailed specifications, quantities, and review requirements for granular tracking and management                  |
+| SubmittalReview       | Tenant | No     | Review records capturing architect/engineer/GC decisions (approved, revise, rejected) with detailed feedback; may be linked to generic ApprovalRequests where needed |
+| SubmittalAttachment   | Tenant | No     | Supporting documentation including drawings, photos, safety data sheets, and product data with version control and access management                    |
+| SubmittalStatus       | Tenant | No     | Status management with standardized workflow stages including draft, submitted, under review, approved, and rejected                                    |
+| SubmittalSpecSection  | Tenant | No     | Specification section linkage with CSI MasterFormat integration for standardized construction specification compliance and reference                    |
+| SubmittalReviewer     | Tenant | No     | Reviewer assignment management with role-based responsibilities, expertise areas, and authority ranges                                                  |
+| SubmittalWorkflowStep | Tenant | No     | Review sequence management with step-by-step workflow progression from general contractor through architect and engineer reviews                        |
+| SubmittalDistribution | Tenant | No     | Distribution list management for stakeholder notification, document sharing, and communication coordination throughout the review process               |
+| SubmittalHistoryEvent | Tenant | No     | Complete submittal lifecycle audit trail including submission, reviews, approvals, rejections, and revisions with comprehensive stakeholder attribution |
 
 ## tasks
 
