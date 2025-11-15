@@ -1,4 +1,24 @@
-# macOS
+# ==== VS Code ====
+# Keep important config files, ignore user-specific ones
+.vscode/launch.json
+.vscode/tasks.json
+!.vscode/copilot.json
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ==== Copilot Cache ====
+.copilot-cache/
+.copilot-temp/
+.github-copilot/
+**/copilot-cache/**
+.copilot-stats.md
+.copilot-analysis.md
+.copilot-index.md
+
+# Keep Copilot configuration files
+!.copilot-context.md
+
+# ==== macOS ====
 .DS_Store
 .DS_Store?
 ._*

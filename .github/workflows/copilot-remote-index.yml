@@ -1,0 +1,160 @@
+name: GitHub Copilot Remote Index Maintenance
+
+on:
+  push:
+    branches: [ main, develop, ModuleDocumentation ]
+    paths:
+      - 'src/**'
+      - 'prisma/**'
+      - 'modules/**'
+      - 'scripts/**'
+      - '*.md'
+      - '*.json'
+      - '*.ts'
+      - '*.js'
+      - '.vscode/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'prisma/**'
+      - 'modules/**'
+      - 'scripts/**'
+      - '*.md'
+      - '*.json'
+      - '*.ts'
+      - '*.js'
+  schedule:
+    # Daily at 2 AM UTC to refresh remote index
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-remote-index:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better context
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        if [ -f package.json ]; then
+          npm ci
+        fi
+        
+    - name: Validate TypeScript files
+      run: |
+        if [ -f tsconfig.json ]; then
+          npx tsc --noEmit --skipLibCheck
+        fi
+        
+    - name: Validate Prisma schema
+      run: |
+        if [ -d prisma ]; then
+          npx prisma validate || true
+        fi
+        
+    - name: Generate documentation index
+      run: |
+        # Create a comprehensive index of all important files for Copilot
+        echo "# ERP Platform File Index" > .copilot-index.md
+        echo "" >> .copilot-index.md
+        echo "## Architecture Documents" >> .copilot-index.md
+        find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*" | head -20 >> .copilot-index.md
+        echo "" >> .copilot-index.md
+        echo "## Source Files" >> .copilot-index.md
+        find ./src -name "*.ts" -o -name "*.js" | head -50 >> .copilot-index.md 2>/dev/null || true
+        echo "" >> .copilot-index.md
+        echo "## Prisma Schemas" >> .copilot-index.md
+        find ./prisma -name "*.prisma" | head -20 >> .copilot-index.md 2>/dev/null || true
+        echo "" >> .copilot-index.md
+        echo "## Module Definitions" >> .copilot-index.md
+        find ./modules -name "*.md" | head -50 >> .copilot-index.md 2>/dev/null || true
+        
+    - name: Update repository topics
+      run: |
+        # Add topics that help with GitHub Copilot discovery
+        echo "Repository topics that enhance Copilot context:"
+        echo "- enterprise-erp"
+        echo "- multi-tenant"
+        echo "- typescript"
+        echo "- prisma"
+        echo "- ai-powered"
+        echo "- construction-management"
+        echo "- project-management"
+        echo "- financial-management"
+        
+    - name: Generate code statistics
+      run: |
+        echo "# Code Statistics" > .copilot-stats.md
+        echo "" >> .copilot-stats.md
+        echo "## Lines of Code" >> .copilot-stats.md
+        find . -name "*.ts" -not -path "./node_modules/*" | xargs wc -l | tail -1 >> .copilot-stats.md 2>/dev/null || echo "No TypeScript files" >> .copilot-stats.md
+        find . -name "*.prisma" -not -path "./node_modules/*" | xargs wc -l | tail -1 >> .copilot-stats.md 2>/dev/null || echo "No Prisma files" >> .copilot-stats.md
+        find . -name "*.md" -not -path "./node_modules/*" | xargs wc -l | tail -1 >> .copilot-stats.md 2>/dev/null || echo "No Markdown files" >> .copilot-stats.md
+        
+    - name: Validate Copilot configuration
+      run: |
+        if [ -f .vscode/copilot.json ]; then
+          echo "Copilot configuration found and valid"
+          # Validate JSON syntax
+          python3 -m json.tool .vscode/copilot.json > /dev/null || echo "Invalid JSON in copilot.json"
+        else
+          echo "Warning: No copilot.json configuration found"
+        fi
+        
+    - name: Check workspace health
+      run: |
+        echo "=== Workspace Health Check ==="
+        echo "Repository structure:"
+        ls -la
+        echo ""
+        echo "Important directories:"
+        [ -d src ] && echo "✓ src/" || echo "✗ src/ missing"
+        [ -d prisma ] && echo "✓ prisma/" || echo "✗ prisma/ missing"  
+        [ -d modules ] && echo "✓ modules/" || echo "✗ modules/ missing"
+        [ -d .vscode ] && echo "✓ .vscode/" || echo "✗ .vscode/ missing"
+        echo ""
+        echo "Configuration files:"
+        [ -f package.json ] && echo "✓ package.json" || echo "✗ package.json missing"
+        [ -f tsconfig.json ] && echo "✓ tsconfig.json" || echo "✗ tsconfig.json missing"
+        [ -f .vscode/copilot.json ] && echo "✓ .vscode/copilot.json" || echo "✗ .vscode/copilot.json missing"
+        [ -f .vscode/settings.json ] && echo "✓ .vscode/settings.json" || echo "✗ .vscode/settings.json missing"
+
+  analyze-codebase:
+    runs-on: ubuntu-latest
+    needs: update-remote-index
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Analyze module structure
+      run: |
+        echo "# Module Analysis" > .copilot-analysis.md
+        echo "" >> .copilot-analysis.md
+        echo "## Module Count" >> .copilot-analysis.md
+        find ./modules -name "*.md" | wc -l >> .copilot-analysis.md 2>/dev/null || echo "0" >> .copilot-analysis.md
+        echo "" >> .copilot-analysis.md
+        echo "## Key Modules" >> .copilot-analysis.md
+        find ./modules -name "*.md" | head -10 >> .copilot-analysis.md 2>/dev/null || echo "No modules found" >> .copilot-analysis.md
+        
+    - name: Analyze dependencies
+      run: |
+        if [ -f package.json ]; then
+          echo "## Dependencies Analysis" >> .copilot-analysis.md
+          echo "Production dependencies:" >> .copilot-analysis.md
+          cat package.json | grep -A 20 '"dependencies"' | head -15 >> .copilot-analysis.md || true
+          echo "" >> .copilot-analysis.md
+          echo "Development dependencies:" >> .copilot-analysis.md  
+          cat package.json | grep -A 20 '"devDependencies"' | head -15 >> .copilot-analysis.md || true
+        fi

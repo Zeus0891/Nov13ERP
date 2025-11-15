@@ -1,0 +1,126 @@
+# GitHub Copilot Workspace Context Configuration
+
+# Files and patterns to include for better context understanding
+include:
+  # Core documentation
+  - "*.md"
+  - "README*"
+  - "CHANGELOG*"
+  - "ARCHITECTURE*"
+  - "ERP_*.md"
+  - "modules/**/*.md"
+  
+  # Configuration files
+  - "package.json"
+  - "tsconfig.json"
+  - ".vscode/**"
+  - "prisma.config.ts"
+  
+  # Source code
+  - "src/**/*.ts"
+  - "src/**/*.js"
+  
+  # Database schemas
+  - "prisma/**/*.prisma"
+  - "scripts/**/*.ts"
+  
+  # Test files
+  - "tests/**/*.ts"
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  
+  # Important configuration
+  - ".env.example"
+  - "jest.config.js"
+
+# Files and patterns to exclude from indexing
+exclude:
+  - "node_modules/**"
+  - "dist/**"
+  - "build/**"
+  - ".git/**"
+  - "coverage/**"
+  - "*.log"
+  - "logs/**"
+  - ".cache/**"
+  - ".turbo/**"
+  - ".next/**"
+  - "generated/**"
+  - "deprecable/**"
+  - "**/*.lock"
+  - "**/*.tmp"
+  - "**/*.temp"
+
+# Project-specific context hints
+context:
+  description: "Enterprise ERP Platform - Multi-tenant SaaS with AI integration"
+  
+  technologies:
+    - "Node.js 20+"
+    - "TypeScript (strict)"
+    - "Express.js"
+    - "Prisma ORM"
+    - "PostgreSQL"
+    - "Multi-tenant architecture"
+    - "Row-level security (RLS)"
+    - "AI integration"
+  
+  architecture:
+    - "Domain-driven design (DDD)"
+    - "Hexagonal architecture"
+    - "Microservice-ready modules"
+    - "Actor-based audit trails"
+    - "Enterprise security patterns"
+  
+  business_domains:
+    - "Customer Relationship Management (CRM)"
+    - "Project Management"
+    - "Financial Management"
+    - "Inventory Management"
+    - "Human Resources"
+    - "Document Management"
+    - "AI & Analytics"
+    - "Field Service Management"
+  
+  key_patterns:
+    - "Multi-tenant data isolation"
+    - "Immutable audit trails"
+    - "Role-based access control (RBAC)"
+    - "Attribute-based access control (ABAC)"
+    - "Universal approval workflows"
+    - "AI-powered document intelligence"
+    - "Real-time synchronization"
+
+# Remote indexing preferences
+remote_index:
+  strategy: "comprehensive"
+  priority: "high"
+  include_dependencies: true
+  cross_repository_context: true
+  semantic_analysis: true
+  
+  # Repository-specific knowledge
+  focus_areas:
+    - "ERP module architecture"
+    - "Database schema relationships" 
+    - "TypeScript patterns"
+    - "Prisma best practices"
+    - "Multi-tenant security"
+    - "Enterprise API design"
+
+# Code generation preferences
+generation:
+  style: "enterprise"
+  patterns:
+    - "Comprehensive error handling"
+    - "Structured logging"
+    - "Input validation"
+    - "Type safety"
+    - "Security-first design"
+    - "Audit trail implementation"
+  
+  documentation:
+    - "JSDoc comments"
+    - "README files"
+    - "API documentation"
+    - "Architecture decisions"

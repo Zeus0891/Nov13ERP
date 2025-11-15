@@ -5,11 +5,13 @@ Consolidated documentation for ERP modules extracted from the `/modules` directo
 Note: This document defines the canonical target module/model layout for the ERP. It is derived from the `/modules` directory and may also include forward-looking modules and models that are not yet implemented but are intended as the reference design.
 
 ## accesscontrol.prisma
+
 // Original module name: AccessControl
 
 Strategic purpose: Role- and attribute-based access enforcement with granular scopes, policies, and complete auditing across the ERP.
 
 Notes:
+
 - Supports RBAC and ABAC with `resource.action` permissions.
 - Authorization is evaluated in the context of a tenant `Member` (or `ServiceAccount`) rather than raw `User` records.
 - Permissions are defined globally and attached to tenant-scoped roles.
@@ -31,11 +33,13 @@ Notes:
 | ServiceAccountKey    | Tenant | No     | Credentials/API keys bound to a `ServiceAccount` with scopes, rotation history, and revocation metadata. |
 
 ## aicore.prisma
+
 // Original module name: AI — Core
 
 Strategic purpose: Model registry, orchestration, automation, and execution primitives for AI-driven processes (models, prompts, playbooks, jobs, and embeddings).
 
 Notes:
+
 - Central registry of models and versions with capability and cost metadata.
 - Prompt templates, playbooks and action definitions for repeatable automations.
 - Async job management, artifacts, and embedding storage for semantic services.
@@ -54,11 +58,13 @@ Notes:
 | AIJobArtifact          | Tenant | No     | Generated outputs from AI jobs (JSON, processed files, reports, intermediate artifacts)                                                                                     |
 
 ## aidocument.prisma
+
 // Original module name: AI — Document Intelligence
 
 Strategic purpose: OCR, document processing, extraction, classification, semantic indexing, and chunk-level embeddings for hybrid search and downstream analysis.
 
 Notes:
+
 - OCR and extraction pipelines with confidence and positional metadata.
 - Document indexing with chunking and vector embeddings for semantic retrieval.
 - Document history and attachment lineage for traceability.
@@ -77,11 +83,13 @@ Notes:
 | AIInsightFeedback      | Tenant | No     | Human feedback and corrections for reinforcement and accuracy tracking                                                                                                      |
 
 ## aiinsights.prisma
+
 // Original module name: AI — Insights & Analytics
 
 Strategic purpose: Business insights, predictions, recommendations, anomaly detection, trend analysis, and scenario modeling driven by AI and statistical engines.
 
 Notes:
+
 - Insight artifacts and history for governance and remediation.
 - Predictions, forecasts, trend series, anomalies, and what-if simulations for planning.
 - Attachments and human feedback for validation and audit.
@@ -98,12 +106,12 @@ Notes:
 | AIWhatIfRun            | Tenant | No     | Scenario simulations (crew size, material prices, weather delays, scope changes) and impact analyses                                                                        |
 | AIInsightAttachment    | Tenant | No     | Supporting charts, reports, references, and justification artifacts for insights                                                                                            |
 
-
 ## approvals.prisma
 
 Strategic purpose: Central approvals engine reused across Projects, Estimates, Change Orders, Invoices, and POs with configurable, auditable workflows.
 
 Notes:
+
 - Multi-level workflows (sequential/parallel) with thresholds and rules.
 - Escalations and SLAs for overdue approvals.
 - Condition-based routing using document attributes and risk.
@@ -127,6 +135,7 @@ Notes:
 Strategic purpose: Enterprise billing and AR with progress/milestone/T&M billing, retainage, deposits, payment application, aging, and collections.
 
 Notes:
+
 - Multiple billing methods (T&M, milestone, % complete) with retainage.
 - AR ledger with payment application and aging snapshots.
 - Dunning/collections with audit history of billing lifecycle.
@@ -146,11 +155,13 @@ Notes:
 | BillingHistoryEvent         | Tenant | No     | Lifecycle audit: generated, delivered, due, received, overdue, collection actions, dunning notices, partials, settlement                                                                                                         |
 
 ## changeorder.prisma
+
 // Original module name: ChangeOrder
 
 Strategic purpose: Formal contract modifications managing scope, cost, and schedule changes with approvals, documentation, and auditability.
 
 Notes:
+
 - Full lifecycle from identification to approval and billing.
 - Cost and schedule impact analysis with milestone effects.
 - Linked RFIs, drawings, calculations, and client correspondence.
@@ -170,11 +181,13 @@ Notes:
 | ChangeOrderHistoryEvent | Tenant | No     | Complete lifecycle audit from identification and proposal to review, negotiation, approval/rejection, contract incorporation, and billing integration                       |
 
 ## crmcore.prisma
+
 // Original module name: CRM — Core
 
 Strategic purpose: Nucleus of customer/account data — master accounts, contacts, addresses, activities, tagging, and audit history enabling CRM-driven sales and service workflows.
 
 Notes:
+
 - Canonical account and contact records linked to billing, projects, and interactions.
 - External participants with portal access are represented as `Member` records of type EXTERNAL_CLIENT / PARTNER and linked back to CRM accounts/contacts via the membership directory.
 - Support for multiple address types and rich interaction logging with attachments.
@@ -194,11 +207,13 @@ Notes:
 | CRMHistoryEvent         | Tenant | No     | Timeline events capturing creates, updates, interactions, notes, segmentation changes, and lifecycle state changes. |
 
 ## crmcommunication.prisma
+
 // Original module name: CRM — Communication
 
 Strategic purpose: Omnichannel customer communication — emails, SMS, calls, and messaging threads with delivery, history, and compliance tracking.
 
 Notes:
+
 - Email, SMS, and voice call storage with attachments and delivery logs.
 - Conversation threads and read receipts for collaborative workflows.
 - Participants in threads are normalized to `Member` and/or CRM contact/account records for auditability.
@@ -218,11 +233,13 @@ Notes:
 | CRMNotificationEvent    | Tenant | No     | Delivery and engagement events for notifications (sent, delivered, opened) with attribution to the triggering `Actor`/`Member`. |
 
 ## crmrelationships.prisma
+
 // Original module name: CRM — Relationships
 
 Strategic purpose: Model complex account hierarchies, partner networks, households, and contact roles to represent real-world organizational structures.
 
 Notes:
+
 - Parent/child account hierarchies and household grouping for residential customers.
 - Relationship types for partners, subsidiaries, decision-makers, and influencers.
 - When relationship participants have login access, they are linked to `Member` records to unify identity and authorization.
@@ -242,11 +259,13 @@ Notes:
 | CRMRelationshipHistoryEvent| Tenant| No     | Timeline of changes to relationship mappings and roles with `Actor` attribution. |
 
 ## customerportal.prisma
+
 // Original module name: CustomerPortal
 
 Strategic purpose: Secure customer-facing portal delivering access to invoices, estimates, project views, messages, and payments on top of the global identity and membership model.
 
 Notes:
+
 - Portal authentication uses global `User` from `identityCore`; tenant context and permissions are derived from `Member` records of type EXTERNAL_CLIENT / PARTNER.
 - No separate credential store is maintained in the portal; `CustomerPortalUser` is a portal profile bound to a `Member` plus CRM entities.
 - Fine-grained view permissions for invoices, projects, estimates, and documents are enforced via AccessControl using `Member` and scopes.
@@ -266,11 +285,13 @@ Notes:
 | CustomerPortalHistoryEvent  | Tenant | No     | Portal activity events (login, view, download, pay, message send) for audit, analytics, and support. |
 
 ## analytics.prisma
+
 // Original module name: Analytics Core
 
 Strategic purpose: Configurable dashboards, visualizations, datasets and analytics primitives for operational and executive insights.
 
 Notes:
+
 - Core analytics datasets, metrics, dimensions and saved queries.
 - Dashboard definition, widgets, user views, scheduling and sharing.
 - Insight entities for automated and manual observations.
@@ -289,11 +310,13 @@ Notes:
 | AnalyticsAttachment     | Tenant | No     | Exported artifacts (CSV/Excel/PDF) for dashboards                                                                                                                              |
 
 ## dashboards.prisma
+
 // Original module name: Dashboards & Visualizations
 
 Strategic purpose: User-facing dashboards, widget configuration, layout management and sharing for role-based insights.
 
 Notes:
+
 - Dashboard containers, widgets, templates, schedules, bookmarks and sharing controls.
 - User-personalized layouts and folder organization.
 
@@ -311,11 +334,13 @@ Notes:
 | DashboardHistoryEvent   | Tenant | No     | Audit events for dashboard changes and usage                                                                                                                                    |
 
 ## documentscore.prisma
+
 // Original module name: Documents — Core
 
 Strategic purpose: File storage, versioning, permissions, sharing and collaboration for project and administrative documents.
 
 Notes:
+
 - Core document entity, foldering, versioning, revisions and comments.
 - Permissions, share links and history for governance.
 
@@ -333,11 +358,13 @@ Notes:
 | DocumentHistoryEvent    | Tenant | No     | Audit timeline for document events                                                                                                                                            |
 
 ## documentsai.prisma
+
 // Original module name: Documents — OCR & AI
 
 Strategic purpose: OCR, extraction, classification, chunking and embedding for semantic search and automated data capture.
 
 Notes:
+
 - OCR results, AI extraction outputs, annotation and indexing for document analytics.
 
 | Model                   | Scope  | Parent |                                                Description                                                                                                                   |
@@ -354,11 +381,13 @@ Notes:
 | DocumentAIHistory       | Tenant | No     | Audit history for document AI processing                                                                                                                                      |
 
 ## esignature.prisma
+
 // Original module name: ESignature
 
 Strategic purpose: Enterprise e-signature workflow handling envelopes, recipients, fields, notifications and audit trails.
 
 Notes:
+
 - Envelope-based signing, recipient actions, field placement, and signature workflows.
 - Full audit trail and notification/reminder system.
 
@@ -375,13 +404,14 @@ Notes:
 | ESignatureNotification  | Tenant | No     | Reminder and notification records                                                                                                                                             |
 | ESignatureHistoryEvent  | Tenant | No     | Timeline of envelope events                                                                                                                                                   |
 
-
 ## messaging.prisma
+
 // Original module name: Communications — Messaging / Chat
 
 Strategic purpose: Real-time and threaded messaging for collaboration across users, crews, and external partners — includes attachments, reactions, visibility rules, and audit history.
 
 Notes:
+
 - Threaded conversations (1:1, group, channel) with participation and read receipts.
 - Attachments, reactions, mentions, pins and visibility rules for project contexts.
 - Audit trail for edits/deletes and message history.
@@ -400,11 +430,13 @@ Notes:
 | MessageHistoryEvent     | Tenant | No     | Audit of edits, deletes, and system events for messages                                                                                                                         |
 
 ## emailengine.prisma
+
 // Original module name: Communications — Email Engine
 
 Strategic purpose: Enterprise email backend integrated with CRM and projects — supports templates, campaigns, threading, delivery logs, and bounce handling.
 
 Notes:
+
 - Store emails, recipients, attachments, send logs and bounce tracking.
 - Link email threads to projects, RFIs, invoices and other entities.
 - Support bulk campaigns and template reuse.
@@ -423,11 +455,13 @@ Notes:
 | EmailHistoryEvent       | Tenant | No     | Timeline of changes, resends, and actions related to emails                                                                                                                     |
 
 ## smscalls.prisma
+
 // Original module name: Communications — SMS & Calls
 
 Strategic purpose: SMS and telephony integration for notifications, two-way messaging, and call recording with provider management.
 
 Notes:
+
 - SMS inbound/outbound records and media attachments.
 - Call sessions with recordings, IVR menus, queues, and number pools.
 - Configurable providers (Twilio, Plivo) per tenant.
@@ -450,6 +484,7 @@ Notes:
 Strategic purpose: Track regulatory and contractual compliance requirements, evidence, audits, training, and remediation actions across projects and vendors.
 
 Notes:
+
 - Define compliance requirements and attach certificates/COIs/permits.
 - Periodic checks, violations, correction actions and formal audits.
 - Training records and full compliance history for reporting and insurance.
@@ -472,6 +507,7 @@ Notes:
 Strategic purpose: Manage master contracts, scopes, terms, deliverables, milestones, amendments, signatures, and contract-level compliance.
 
 Notes:
+
 - Master contract record with scopes, terms, and deliverables.
 - Amendments and signatures with evidence attachments.
 - Contract-level compliance and history tracking separate from change orders.
@@ -494,6 +530,7 @@ Notes:
 Strategic purpose: Comprehensive estimating system with versioning, sections, line items, taxes, discounts, alternates, approvals, and public sharing links for client review.
 
 Notes:
+
 - Revision history with immutable snapshots for audit trails and comparison analysis.
 - Sectioned estimates with granular line-item details, taxes, fees, assumptions, and exclusions.
 - Template-based estimation and public links for client review and acceptance workflows.
@@ -518,13 +555,14 @@ Notes:
 | EstimateHistoryEvent | Tenant | No     | Comprehensive audit trail capturing estimate lifecycle events, status changes, and stakeholder activities                                      |
 | EstimatePublicLink   | Tenant | No     | Public access links enabling client review, acceptance, and feedback collection without system access                                          |
 
-
 ## expensecore.prisma
+
 // Original module name: expensesCore
 
 Strategic purpose: Employee expense management with comprehensive reporting, receipt handling, policy enforcement, approvals, and reimbursement processing.
 
 Notes:
+
 - Expense reports containing multiple line items with receipt attachment and policy validation.
 - Automated policy enforcement with violation detection and escalation workflows.
 - Integration with reimbursement processing and financial reporting systems.
@@ -542,12 +580,12 @@ Notes:
 | ExpenseAttachment      | Tenant | No     | Supplemental documentation including emails, supporting files, and additional evidence                                                      |
 | ExpenseHistoryEvent    | Tenant | No     | Complete timeline tracking submission, review, approval, rejection, and reimbursement activities (with approvals linked via Approvals module)|
 
-
 ## expenses.prisma
 
 Strategic purpose: Corporate credit card management with transaction feeds, automated reconciliation, receipt capture, and dispute resolution capabilities.
 
 Notes:
+
 - Bank feed integration for real-time transaction import and processing.
 - Automated matching between card transactions and expense reports with manual override capabilities.
 - Vendor categorization and spending limit enforcement with alert mechanisms.
@@ -565,11 +603,13 @@ Notes:
 | CorpCardHistoryEvent    | Tenant | No     | Audit trail for card lifecycle events including assignment, limit changes, suspension, and closure activities                                                              |
 
 ## generalledger.prisma
+
 // Original module name: generalLedger
 
 Strategic purpose: Core financial accounting infrastructure with chart of accounts, fiscal period management, journal entries, and trial balance snapshots for statutory reporting.
 
 Notes:
+
 - Comprehensive chart of accounts supporting multi-dimensional segmentation and hierarchical organization.
 - Fiscal year and period management with configurable calendars and closing procedures.
 - Manual journal entry capabilities with approval workflows and audit trails.
@@ -588,13 +628,14 @@ Notes:
 | GLTrialBalanceSnapshot | Tenant | No     | Point-in-time trial balance captures for reporting, analysis, and audit preparation                                                         |
 | GLHistoryEvent         | Tenant | No     | Comprehensive audit trail for chart of accounts modifications, period management, and journal entry activities                             |
 
-
 ## accountingtransaction.prisma
+
 // Original module name: accountingTransaction
 
 Strategic purpose: Universal transaction processing system normalizing all financial events including invoices, payments, journal entries, and allocations with comprehensive audit capabilities.
 
 Notes:
+
 - Unified transaction model supporting accounts receivable, accounts payable, inventory, payroll, and general ledger entries.
 - Source document linkage maintaining traceability to originating business transactions.
 - Multi-dimensional allocation support for cost center, department, and project accounting.
@@ -617,6 +658,7 @@ Notes:
 Strategic purpose: Bank account management with automated feed integration, reconciliation processing, and cash flow monitoring for comprehensive treasury operations.
 
 Notes:
+
 - Multi-bank connectivity through standardized APIs and file-based feeds with automated transaction import.
 - Sophisticated reconciliation engine with rule-based matching and exception handling capabilities.
 - Cash position monitoring and inter-account transfer management for optimal liquidity control.
@@ -635,13 +677,14 @@ Notes:
 | BankDeposit            | Tenant | No     | Deposit documentation and batch processing with source transaction linkage and clearing management                                         |
 | BankHistoryEvent       | Tenant | No     | Comprehensive audit trail for banking operations including account setup, reconciliation activities, and configuration changes             |
 
-
 ## taxcompliance.prisma
+
 // Original module name: tax&AccountingCompliance
 
 Strategic purpose: Tax jurisdiction management with automated rate calculation, liability tracking, filing preparation, and exemption certificate handling for comprehensive tax compliance.
 
 Notes:
+
 - Multi-jurisdictional tax rate management supporting state, county, and municipal tax authorities with automated updates.
 - Sales tax liability calculation and reporting with automated filing preparation and submission capabilities.
 - Exemption certificate management with validation workflows and compliance monitoring.
@@ -660,11 +703,13 @@ Notes:
 | TaxHistoryEvent         | Tenant | No     | Comprehensive audit trail for tax processing activities including rate changes, filing submissions, and compliance reviews                                                |
 
 ## hrcore.prisma
+
 // Original module name: hrCore
 
 Strategic purpose: Employee record management with comprehensive worker lifecycle, skills, documentation, and organizational structure maintenance.
 
 Notes:
+
 - `Employee` is the HR representation of an internal worker within a tenant and is always linked 1:1 to a `Member` of type INTERNAL.
 - A single natural person may have multiple `Employee` records across tenants but only one global `User` in `identityCore`.
 - HR data flows into time & attendance, payroll, safety, and compliance; it is not used directly for authentication or authorization.
@@ -683,11 +728,13 @@ Notes:
 | EmployeeHistoryEvent| Tenant | No     | Audited lifecycle events for employees (hire, promotion, pay change, leave, termination) with `Actor`/`Member` attribution. |
 
 ## payroll.prisma
+
 // Original module name: payrollEngine
 
 Strategic purpose: Comprehensive payroll processing system with earnings calculation, tax computation, benefits administration, and regulatory compliance capabilities.
 
 Notes:
+
 - Automated payroll run execution with multi-pay-period support and complex earning calculations.
 - Integrated tax calculation supporting federal, state, and local tax obligations with automatic updates.
 - Benefits administration with deduction management and direct deposit capabilities.
@@ -706,13 +753,14 @@ Notes:
 | PayrollDirectDeposit | Tenant | No     | Direct deposit configurations and processing records with bank account information, split allocations, and transaction confirmations                            |
 | PayrollHistoryEvent  | Tenant | No     | Comprehensive audit trail for payroll processing activities including run execution, corrections, and regulatory reporting                                       |
 
-
 ## timeattendance.prisma
+
 // Original module name: time&attendance
 
 Strategic purpose: Time tracking and attendance management with timesheet processing, overtime calculation, break monitoring, and location verification capabilities.
 
 Notes:
+
 - Digital timesheet management with project and cost code allocation for accurate job costing.
 - GPS location tracking and geo-fencing for field employee time validation and compliance.
 - Automated overtime calculation with break compliance monitoring.
@@ -730,13 +778,14 @@ Notes:
 | TimesheetExport      | Tenant | No     | Export records for payroll and general ledger integration with batch processing status and reconciliation tracking                           |
 | TimesheetHistoryEvent| Tenant | No     | Comprehensive audit trail for timesheet lifecycle including submissions, approvals, corrections, and system integrations                     |
 
-
 ## identity.prisma
+
 // Original module name: identityCore
 
 Strategic purpose: Foundational global identity system providing single sign-on across tenants, session management, personal API keys, and global-level profile/state.
 
 Notes:
+
 - `User` is global and never carries `tenantId`; a single person can belong to many tenants via `Member` records in the membership directory.
 - All authentication flows (password, SSO, MFA) terminate at `User`; authorization is evaluated in **AccessControl** using `Member`/`ServiceAccount` and scopes.
 - `Tenant` lifecycle and configuration is owned by the **tenant** module; `identityCore` only references tenants indirectly via membership.
@@ -754,11 +803,13 @@ Notes:
 | UserHistoryEvent| Global | No     | Immutable history of major identity events: sign-ups, verification, merges, deactivation/reactivation, consent, and security-related changes. |
 
 ## membership.prisma
+
 // Original module name: membershipDirectory
 
 Strategic purpose: Tenant-level membership and directory of all internal and external participants. Bridges global `User` identities to tenants, HR employees, CRM accounts/contacts, vendors, and portal participants.
 
 Notes:
+
 - `Member` is the canonical representation of "a person (or external actor) inside a tenant" and is always tenant-scoped.
 - Members can be INTERNAL (employees/staff), EXTERNAL_CLIENT (customers/owners), EXTERNAL_VENDOR (vendors/subcontractors), PARTNER, or GUEST.
 - Every interactive action in a tenant should resolve to a `Member` (or `ServiceAccount`) for audit, RBAC, and scoping.
@@ -774,11 +825,13 @@ Notes:
 | MemberHistoryEvent  | Tenant | No     | Audited membership lifecycle events (invited, joined, activated, role changes, disabled, removed) with `Actor` attribution. |
 
 ## identitysecurity.prisma
+
 // Original module name: identitySecurity
 
 Strategic purpose: Advanced security for global identity — MFA, SSO, device trust, recovery, and security events — layered on top of `identityCore` and reused across tenants.
 
 Notes:
+
 - All security artifacts attach to the global `User` (and `Actor`) rather than directly to tenant membership.
 - Tenant-specific enforcement rules (e.g., required MFA level, allowed IdPs) are configured through AccessControl policies and membership configuration.
 - Supports passwordless, WebAuthn, TOTP, SMS/email MFA, and federated SSO (OIDC/SAML).
@@ -802,6 +855,7 @@ Notes:
 Strategic purpose: External system integration management providing connection orchestration, data mapping, field transformation, and comprehensive error handling for seamless third-party connectivity.
 
 Notes:
+
 - Comprehensive integration provider catalog with OAuth token management and secure credential storage.
 - Flexible data mapping and field transformation engine supporting complex business logic and data conversion rules.
 - Robust error handling and connection monitoring with automated retry mechanisms and audit capabilities.
@@ -824,6 +878,7 @@ Notes:
 Strategic purpose: Real-time synchronization engine managing bidirectional data flows, webhook processing, queue management, and automated retry mechanisms for reliable system integration.
 
 Notes:
+
 - Asynchronous job processing with comprehensive logging and status tracking for batch and real-time synchronization scenarios.
 - Webhook management supporting both outbound notifications and inbound event processing with delivery guarantees.
 - Intelligent retry policies with rate limiting, exponential backoff, and failure escalation for maximum reliability.
@@ -846,6 +901,7 @@ Notes:
 Strategic purpose: Master inventory data management providing item cataloging, location hierarchy, stock level tracking, and supplier relationship management for comprehensive inventory control.
 
 Notes:
+
 - Comprehensive item master data with categorization, specifications, and multi-unit-of-measure support for diverse inventory types.
 - Hierarchical location management supporting warehouses, bins, mobile locations, and job sites with flexible organization structures.
 - Supplier relationship management with preferred vendor tracking, pricing history, and procurement optimization capabilities.
@@ -868,6 +924,7 @@ Notes:
 Strategic purpose: Comprehensive inventory movement tracking system managing all stock transactions including adjustments, transfers, receipts, returns, and cycle counts with complete audit trails.
 
 Notes:
+
 - Universal transaction framework supporting inbound receipts, outbound issues, location transfers, and manual adjustments with flexible transaction types.
 - Multi-location transfer capabilities supporting warehouse-to-jobsite movements with in-transit tracking and delivery confirmation.
 - Integrated cycle counting with variance analysis, investigation workflows, and automatic stock adjustments for inventory accuracy.
@@ -890,6 +947,7 @@ Notes:
 Strategic purpose: Advanced inventory control system providing loss prevention, audit management, reservation control, and automated reordering for zero-loss inventory management and operational efficiency.
 
 Notes:
+
 - Proactive loss prevention with investigation workflows, root cause analysis, and corrective action tracking for shrinkage reduction.
 - Comprehensive audit capabilities with variance analysis, discrepancy investigation, and accountability measures for inventory accuracy.
 - Intelligent inventory planning with safety stock management, reorder point automation, and demand forecasting integration.
@@ -912,6 +970,7 @@ Notes:
 Strategic purpose: Comprehensive billing and accounts receivable system with multi-billing methods, payment tracking, credit management, and automated collection capabilities.
 
 Notes:
+
 - Flexible billing approaches including progress billing, milestone-based invoicing, and retainage management for construction projects.
 - Advanced payment application with partial payments, credits, debits, and adjustment tracking for complete financial reconciliation.
 - Automated collection workflows with reminder systems, public payment links, and comprehensive approval processes.
@@ -938,12 +997,12 @@ Notes:
 | InvoicePublicLink        | Tenant | No     | Secure public access URLs enabling customer invoice review, approval, and online payment without system access requirements               |
 | InvoiceReminder          | Tenant | No     | Automated collection and reminder system with escalating communication schedules, dunning processes, and customer relationship management |
 
-
 ## jobCosting.prisma
 
 Strategic purpose: Project-based cost accounting system providing real-time cost tracking, budget management, forecasting, and profitability analysis with industry-standard cost code integration.
 
 Notes:
+
 - CSI MasterFormat compatible cost coding system supporting standardized construction and service industry cost classifications.
 - Real-time cost capture and allocation across labor, materials, equipment, and subcontract categories with budget variance analysis.
 - Comprehensive forecasting capabilities with cost-to-complete projections and profitability optimization recommendations.
@@ -967,6 +1026,7 @@ Notes:
 Strategic purpose: Subscription-based service contract management with recurring maintenance scheduling, automated billing, customer retention, and service delivery optimization.
 
 Notes:
+
 - Flexible service contract templates supporting monthly, seasonal, and custom recurring schedules with automated task generation.
 - Integrated payment processing with stored payment methods, automatic renewal management, and subscription billing capabilities.
 - Customer retention tools including cancellation management, renewal optimization, and service quality tracking.
@@ -990,6 +1050,7 @@ Notes:
 Strategic purpose: Enterprise notification system providing multi-channel alert delivery, user preference management, automated notification rules, and comprehensive delivery tracking across all business processes.
 
 Notes:
+
 - Multi-channel delivery supporting email, SMS, push notifications, and in-app alerts with user preference management and delivery optimization.
 - Rule-based notification automation with trigger conditions, template management, and intelligent routing for business process integration.
 - Comprehensive delivery tracking with retry mechanisms, failure handling, and performance analytics for reliable communication.
@@ -1012,6 +1073,7 @@ Notes:
 Strategic purpose: Comprehensive payment processing and accounts receivable management system with multi-gateway support, cash application, reconciliation, and dispute resolution capabilities.
 
 Notes:
+
 - Multi-payment method support including credit cards, ACH, checks, wire transfers, and cash with gateway integration.
 - Advanced cash application with partial payment handling, unapplied credit management, and comprehensive reconciliation workflows.
 - Integrated dispute management with chargeback handling, refund processing, and payment gateway transaction tracking.
@@ -1034,6 +1096,7 @@ Notes:
 Strategic purpose: Complete procurement lifecycle management from requisition through purchase order execution, receipt verification, and vendor payment integration with comprehensive approval workflows.
 
 Notes:
+
 - End-to-end procurement process supporting requisitions, purchase orders, receipts, and returns.
 - Multi-level approvals for requisitions and POs are orchestrated via the central **Approvals** module (`ApprovalRequest`, `ApprovalDecision`, etc.), not mediante tablas específicas de procurement.
 - Vendor management integration with purchase order tracking, delivery confirmation, and cost impact analysis for project budgeting.
@@ -1051,12 +1114,12 @@ Notes:
 | PurchaseOrderAttachment  | Tenant | No     | Purchase order documentation including vendor invoices, packing slips, delivery receipts, photos, and specification documents                      |
 | PurchaseOrderHistoryEvent| Tenant | No     | Comprehensive audit trail for purchase order lifecycle including creation, approval routing via Approvals, transmission, receipt, invoicing, and payment activities |
 
-
 ## projectsCore.prisma
 
 Strategic purpose: Master project management system providing project definition, phase management, team coordination, budget control, and comprehensive project lifecycle tracking.
 
 Notes:
+
 - Hierarchical project organization with phases, milestones, and location-based work breakdown for comprehensive project structure.
 - Integrated team management with role-based assignments, responsibility tracking, and collaboration capabilities.
 - Master budget control with line-item detail, change management, and real-time cost tracking integration.
@@ -1075,13 +1138,12 @@ Notes:
 | ProjectAttachment     | Tenant | No     | Project file management including drawings, photos, reports, and reference materials with categorization and access control               |
 | ProjectHistoryEvent   | Tenant | No     | Comprehensive project audit trail capturing all project-level changes, decisions, and milestone achievements with stakeholder attribution |
 
-
-
 ## projectTaskScheduling.prisma
 
 Strategic purpose: Advanced project scheduling and task management system with dependency tracking, critical path analysis, and resource optimization for efficient project execution.
 
 Notes:
+
 - Comprehensive task management with assignment tracking, dependency management, and critical path analysis for schedule optimization.
 - Gantt chart and timeline management with baseline tracking, schedule variance analysis, and automated scheduling updates.
 - Resource allocation and task assignment with workload balancing and collaboration features for team coordination.
@@ -1104,6 +1166,7 @@ Notes:
 Strategic purpose: Project risk management and daily logging system providing risk assessment, issue tracking, decision documentation, and comprehensive project activity recording.
 
 Notes:
+
 - Proactive risk management with impact assessment, mitigation planning, and continuous monitoring for project success.
 - Comprehensive daily logging with labor, equipment, and material tracking for accurate project documentation and cost control.
 - Decision tracking and issue management with resolution workflows and stakeholder accountability for project governance.
@@ -1127,6 +1190,7 @@ Notes:
 Strategic purpose: Comprehensive quality management system providing inspection workflows, non-conformance tracking, corrective action management, and material testing integration for project quality assurance.
 
 Notes:
+
 - Structured inspection processes with checklist management, pass/fail tracking, and photographic documentation for quality verification.
 - Non-conformance management with corrective action tracking, responsibility assignment, and resolution verification for continuous improvement.
 - Material testing integration with lab results, compliance verification, and specification adherence for construction quality standards.
@@ -1144,13 +1208,12 @@ Notes:
 | QualityAttachment       | Tenant | No     | Quality-related documentation including inspection photos, test reports, certificates, and reference drawings with categorization and access control                     |
 | QualityInspectionHistory| Tenant | No     | Comprehensive audit trail for quality activities including inspection results, decision changes, and corrective action completion with stakeholder attribution          |
 
-
 ## RFI.prisma
-**RFIs_Request_for_information**
 
 Strategic purpose: Request for Information management system facilitating communication between field, office, architecture, and engineering teams with comprehensive question tracking and resolution workflows.
 
 Notes:
+
 - Structured RFI workflow supporting question submission, response management, and impact assessment with stakeholder coordination.
 - Integration with change orders, submittals, and document management for comprehensive project communication tracking.
 - Multi-disciplinary support with category management, priority handling, and automated notification systems.
@@ -1173,6 +1236,7 @@ Notes:
 Strategic purpose: Digital twin room modeling system providing automated geometry extraction, surface analysis, item detection, and takeoff generation for accurate estimating and project planning.
 
 Notes:
+
 - Comprehensive room geometry modeling with walls, openings, surfaces, and detected items for complete spatial understanding.
 - Automated takeoff generation with material quantity calculations directly mapped to estimate line items for streamlined estimating workflows.
 - AI-powered item detection with semantic labeling for fixtures, appliances, and building components with cost mapping integration.
@@ -1195,6 +1259,7 @@ Notes:
 Strategic purpose: Advanced room scanning system providing LiDAR, AR, and photogrammetry integration with intelligent processing pipelines for automated room model generation and semantic analysis.
 
 Notes:
+
 - Multi-device scanning support including LiDAR, ARKit, photogrammetry with high-accuracy reconstruction and semantic labeling capabilities.
 - Intelligent processing pipeline converting raw scan data to structured room models with automated feature detection and classification.
 - Real-time scanning with frame-by-frame capture, point cloud reconstruction, and mesh generation for comprehensive spatial documentation.
@@ -1217,6 +1282,7 @@ Notes:
 Strategic purpose: Comprehensive safety management system providing incident tracking, investigation workflows, hazard identification, and weather risk integration for proactive workplace safety assurance.
 
 Notes:
+
 - Complete incident management with investigation workflows, corrective action tracking, and regulatory compliance for comprehensive safety oversight.
 - Proactive hazard identification with inspection schedules, training record management, and safety certification tracking for prevention-focused safety programs.
 - Weather risk integration providing automated safety alerts and risk mitigation for weather-dependent construction and field operations.
@@ -1234,12 +1300,12 @@ Notes:
 | SafetyWeatherRisk       | Tenant | No     | Weather-related safety risk management with automated alerts for high winds, extreme temperatures, precipitation with activity restrictions and protocols              |
 | SafetyIncidentHistoryEvent| Tenant | No   | Comprehensive incident lifecycle tracking including reporting, investigation, corrective actions, and closure with complete audit trail and regulatory compliance      |
 
-
 ## schedulingCore.prisma
 
 Strategic purpose: Global scheduling engine providing comprehensive calendar management, resource allocation, availability tracking, and assignment coordination for enterprise-wide scheduling optimization.
 
 Notes:
+
 - Universal scheduling framework supporting projects, employees, equipment, and resources with comprehensive availability and exception management.
 - Multi-resource assignment capabilities with shift management, time-off tracking, and overtime coordination for optimal resource utilization.
 - Integration-ready architecture supporting project tasks, work orders, appointments, and milestones with unified scheduling workflows.
@@ -1263,6 +1329,7 @@ Notes:
 Strategic purpose: Advanced scheduling optimization system providing AI-driven schedule improvements, constraint management, conflict resolution, and automated scheduling recommendations for maximum efficiency.
 
 Notes:
+
 - Intelligent constraint management with business rules, resource limitations, and dependency tracking for realistic scheduling optimization.
 - AI-powered optimization algorithms providing automatic schedule improvements, conflict resolution, and capacity balancing for operational excellence.
 - Weather integration and travel time optimization with predictive scheduling adjustments and real-time schedule adaptation capabilities.
@@ -1285,6 +1352,7 @@ Notes:
 Strategic purpose: Submittal management system providing review workflows for materials, products, shop drawings, and design documentation with specification compliance tracking.
 
 Notes:
+
 - Complete submittal lifecycle management from submission through review and final disposition with multi-stakeholder processes and revision tracking.
 - Specification section integration with CSI MasterFormat compatibility for standardized construction document management and compliance verification.
 - Automated workflow management with reviewer assignments, distribution lists, and review sequences for efficient project communication.
@@ -1308,6 +1376,7 @@ Notes:
 Strategic purpose: Global task management system providing comprehensive task assignment, tracking, and collaboration capabilities superior to standalone project management tools with ERP integration.
 
 Notes:
+
 - Enterprise task management with assignment tracking, dependency management, and collaboration features integrated across all ERP modules and business processes.
 - Comprehensive task organization with checklists, attachments, comments, and labeling systems for detailed task management and team coordination.
 - Automated reminder systems with due date tracking, overdue notifications, and daily summaries for proactive task completion and accountability.
@@ -1330,6 +1399,7 @@ Notes:
 Strategic purpose: Multi-tenant platform management system providing comprehensive tenant onboarding, configuration, subscription management, and compliance oversight for enterprise SaaS operations.
 
 Notes:
+
 - Complete multi-tenant architecture with tenant isolation, subscription management, and feature flag control for scalable SaaS delivery.
 - Comprehensive tenant customization including branding, domain management, and localization settings for white-label capabilities.
 - Advanced usage tracking and compliance management with GDPR, CCPA, and data retention policy enforcement for regulatory adherence.
@@ -1352,6 +1422,7 @@ Notes:
 Strategic purpose: Advanced weather data collection and analysis system providing real-time observations, forecasting, and alert capabilities for weather-dependent business operations.
 
 Notes:
+
 - Multi-source weather data integration including NOAA, commercial APIs, and IoT sensors for comprehensive weather intelligence and accuracy.
 - Real-time observation and forecasting capabilities with historical data retention for trend analysis and predictive modeling.
 - Official weather alert integration with severe weather warnings, advisories, and watches for proactive risk management and safety protocols.
@@ -1374,6 +1445,7 @@ Notes:
 Strategic purpose: Intelligent weather impact analysis system providing automated risk assessment, project impact prediction, and proactive scheduling recommendations for weather-dependent operations.
 
 Notes:
+
 - Rule-based weather impact engine with customizable thresholds for different trades, activities, and safety requirements for precise risk management.
 - Automated notification system with multi-channel alerts, rescheduling recommendations, and stakeholder communication for proactive project management.
 - Project-specific weather forecasting with location-based predictions and timeline integration for accurate impact assessment and planning optimization.
@@ -1396,6 +1468,7 @@ Notes:
 Strategic purpose: Comprehensive work order and field service management system providing dispatching, mobile field operations, resource tracking, and customer interaction capabilities.
 
 Notes:
+
 - Complete work order lifecycle management from creation through completion with dispatching, assignment, and mobile field support equivalent to leading field service platforms.
 - Integrated resource tracking including materials, labor, and equipment with real-time inventory impact and billing integration for accurate job costing.
 - Customer interaction features including digital signatures, photo documentation, and service completion verification for professional service delivery.
@@ -1418,6 +1491,7 @@ Notes:
 Strategic purpose: Advanced material loss prevention and detection system providing comprehensive loss tracking, investigation workflows, and preventive analytics for zero-loss inventory management.
 
 Notes:
+
 - Proactive loss detection with root cause analysis, investigation management, and corrective action tracking for comprehensive material loss prevention.
 - Multi-location loss tracking across warehouses, job sites, trucks, and procurement with detailed item-level analysis and financial impact assessment.
 - Predictive analytics and trend analysis with loss pattern identification, risk assessment, and prevention recommendations for continuous improvement.
@@ -1434,4 +1508,3 @@ Notes:
 | ZeroLossAuditTrail      | Tenant | No     | Comprehensive audit documentation with investigation timelines, evidence preservation, and compliance reporting for regulatory adherence and accountability             |
 | ZeroLossPreventionPlan  | Tenant | No     | Prevention strategy management with risk mitigation plans, security improvements, and process enhancements for systematic loss reduction                                 |
 | ZeroLossHistoryEvent    | Tenant | No     | Complete loss management audit trail including detection, investigation, corrective actions, and prevention implementation with performance tracking and improvement    |
-
