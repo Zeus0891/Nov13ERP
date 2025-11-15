@@ -1,4 +1,24 @@
-# macOS
+# ==== VS Code ====
+# Keep important config files, ignore user-specific ones
+.vscode/launch.json
+.vscode/tasks.json
+!.vscode/copilot.json
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ==== Copilot Cache ====
+.copilot-cache/
+.copilot-temp/
+.github-copilot/
+**/copilot-cache/**
+.copilot-stats.md
+.copilot-analysis.md
+.copilot-index.md
+
+# Keep Copilot configuration files
+!.copilot-context.md
+
+# ==== macOS ====
 .DS_Store
 .DS_Store?
 ._*
@@ -19,6 +39,7 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+logs/
 
 # Dependency directories
 node_modules/
@@ -53,3 +74,54 @@ docs/.doctrees/
 *.tar.gz
 *.zip
 *.rar
+
+# Node.js specific
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# ESLint cache
+.eslintcache
+
+# Prisma
+src/generated/
+
+# Uploads
+uploads/
+
+# Test files
+.nyc_output
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Yarn Integrity file
+.yarn-integrity
+/src/generated/prisma

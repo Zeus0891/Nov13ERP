@@ -1,0 +1,181 @@
+# GitHub Copilot Workspace Index Configuration
+
+# This file configures remote indexing for GitHub Copilot to provide better
+# workspace context understanding and code suggestions
+
+workspace:
+  name: "Nov13ERP"
+  description: "Enterprise Resource Planning Platform with AI Integration"
+  type: "enterprise-saas"
+  
+  # Primary programming languages
+  languages:
+    - typescript
+    - javascript
+    - sql
+    - prisma
+    - markdown
+  
+  # Framework and technology stack
+  frameworks:
+    - nodejs
+    - express
+    - prisma
+    - postgresql
+  
+  # Key directories for indexing priority
+  important_paths:
+    - src/
+    - prisma/schemas/
+    - modules/
+    - .vscode/
+    - scripts/
+    - tests/
+
+# Remote indexing configuration
+indexing:
+  # Enable comprehensive remote indexing
+  enabled: true
+  
+  # Indexing strategy
+  strategy: "comprehensive"
+  
+  # Include file patterns (glob patterns)
+  include:
+    - "**/*.ts"
+    - "**/*.js"
+    - "**/*.prisma"
+    - "**/*.md"
+    - "**/*.json"
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "src/**/*"
+    - "prisma/**/*"
+    - "modules/**/*"
+    - "scripts/**/*"
+    - "tests/**/*"
+    - ".vscode/**/*"
+  
+  # Exclude patterns to avoid noise
+  exclude:
+    - "node_modules/**"
+    - "dist/**"
+    - "build/**" 
+    - ".git/**"
+    - "coverage/**"
+    - "*.log"
+    - "logs/**"
+    - ".cache/**"
+    - ".turbo/**"
+    - ".next/**"
+    - "generated/**"
+    - "deprecable/**"
+    - "**/*.lock"
+    - "package-lock.json"
+    - "yarn.lock"
+    - "pnpm-lock.yaml"
+  
+  # File size limits (in bytes)
+  max_file_size: 1048576  # 1MB
+  
+  # Enable semantic analysis
+  semantic_analysis: true
+  
+  # Cross-repository context
+  cross_repo_context: true
+
+# Context enhancement
+context:
+  # Project metadata
+  metadata:
+    version: "1.0.0"
+    architecture: "multi-tenant-saas"
+    database: "postgresql"
+    orm: "prisma"
+    
+  # Business domain context
+  domains:
+    - name: "CRM"
+      description: "Customer Relationship Management"
+      modules: ["crmCore", "crmCommunication", "crmRelationships"]
+      
+    - name: "Financial"
+      description: "Financial Management & Accounting"
+      modules: ["invoice", "generalLedger", "banking", "payments"]
+      
+    - name: "Projects"
+      description: "Project Management & Execution"
+      modules: ["projectsCore", "projectTaskScheduling", "estimate"]
+      
+    - name: "Inventory"
+      description: "Inventory & Procurement"
+      modules: ["inventoryCore", "inventoryTransactions", "procurement"]
+      
+    - name: "HR"
+      description: "Human Resources & Payroll"
+      modules: ["hrCore", "payrollEngine", "timeAttendance"]
+      
+    - name: "AI"
+      description: "Artificial Intelligence & Analytics"
+      modules: ["aiCore", "aiDocumentIntelligence", "aiInsights"]
+  
+  # Technical patterns
+  patterns:
+    - name: "Multi-tenant Architecture"
+      description: "Row-level security with tenant isolation"
+      files: ["src/middleware/tenant.ts", "prisma/schemas/*.prisma"]
+      
+    - name: "Actor-based Auditing"
+      description: "Comprehensive audit trails with actor attribution"
+      files: ["src/shared/audit.ts", "src/types/actor.ts"]
+      
+    - name: "Universal Approvals"
+      description: "Centralized approval workflows"
+      files: ["src/modules/approvals/**"]
+      
+    - name: "AI Integration"
+      description: "AI-powered document processing and insights"
+      files: ["src/modules/ai/**"]
+
+# Code generation hints
+generation:
+  # Coding standards
+  standards:
+    - "Use TypeScript strict mode"
+    - "Implement comprehensive error handling" 
+    - "Include proper JSDoc documentation"
+    - "Follow enterprise security patterns"
+    - "Use structured logging"
+    - "Implement input validation"
+    
+  # Common patterns to suggest
+  patterns:
+    - "Actor-based audit trail implementation"
+    - "Multi-tenant data access patterns"
+    - "Prisma transaction management"
+    - "Express middleware patterns"
+    - "Error handling with custom error classes"
+    - "Type-safe API responses"
+    
+  # Preferred libraries and approaches
+  preferences:
+    validation: "zod"
+    logging: "winston"
+    testing: "jest"
+    authentication: "passport"
+    documentation: "jsdoc"
+
+# Performance optimization
+performance:
+  # Indexing performance
+  indexing_priority: "high"
+  
+  # Cache settings
+  cache_enabled: true
+  cache_duration: "24h"
+  
+  # Batch processing
+  batch_size: 100
+  
+  # Parallel processing
+  parallel_indexing: true

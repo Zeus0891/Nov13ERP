@@ -1,0 +1,51 @@
+Nov13ERP Enterprise Resource Planning Platform
+
+This workspace contains a comprehensive ERP system built with:
+
+## Technology Stack
+- Node.js 20+ with TypeScript (strict mode)
+- Express.js with enterprise security middleware  
+- Prisma ORM with PostgreSQL database
+- Multi-tenant architecture with row-level security
+- AI integration for document processing and insights
+
+## Architecture
+- Domain-driven design with 63 business modules
+- Hexagonal architecture principles
+- Actor-based comprehensive audit trails
+- Multi-tenant data isolation
+- Universal approval workflow system
+
+## Key Business Domains
+- CRM (Customer Relationship Management)
+- Project Management & Execution
+- Financial Management & Accounting
+- Inventory & Procurement Management
+- Human Resources & Payroll
+- AI-Powered Document Intelligence
+- Field Service Management
+- Quality Assurance & Compliance
+
+## Database Design
+- 394+ tables across 63 modules
+- Multi-tenant with composite foreign keys
+- Comprehensive audit fields on all entities
+- Immutable financial audit trails
+- Row-level security enforcement
+
+## Security Features
+- Role-based access control (RBAC)
+- Attribute-based access control (ABAC)  
+- Multi-factor authentication
+- Enterprise SSO integration
+- Complete audit logging with actor attribution
+
+## Key Directories
+- src/ - Application source code
+- prisma/schemas/ - Database schema definitions
+- modules/ - Business module documentation
+- .vscode/ - VS Code configuration and settings
+- scripts/ - Utility and build scripts
+- tests/ - Test suites and fixtures
+
+When working with this codebase, follow enterprise patterns for security, audit trails, multi-tenancy, and comprehensive error handling.
